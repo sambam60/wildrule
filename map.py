@@ -1,81 +1,71 @@
+"""
+This file stores all the rooms and areas in the game.
+"""
+
 from items import *
+from interactions import *
 
-room_reception = {
-    "name": "Reception",
-
-    "description":
-    """You are in a maze of twisty little passages, all alike.
-Next to you is the School of Computer Science and
-Informatics reception. The receptionist, Matt Strangis,
-seems to be playing an old school text-based adventure
-game on his computer. There are corridors leading to the
-south and east. The exit is to the west.""",
-
-    "exits": {"south": "Admins", "east": "Tutor", "west": "Parking"},
-
-    "items": [item_biscuits, item_handbook]
-}
-
-room_admins = {
-    "name": "MJ and Simon's room",
+room_starter = {
+    "name": "starting room",
 
     "description":
-    """You are leaning agains the door of the systems managers'
-room. Inside you notice Matt "MJ" John and Simon Jones. They
-ignore you. To the north is the reception.""",
+    """You are now in the starting room.""",
 
-    "exits":  {"north": "Reception"},
+    "exits": {"south": "Test1"},
 
-    "items": []
+    "items": [item_test2],
+
+    "interacts": []
 }
 
-room_tutor = {
-    "name": "your personal tutor's office",
+room_test1 = {
+    "name": "test room 1",
 
     "description":
-    """You are in your personal tutor's office. He intently
-stares at his huge monitor, ignoring you completely.
-On the desk you notice a cup of coffee and an empty
-pack of biscuits. The reception is to the west.""",
+    """You are now in Test Room 1.
+    \nThere is a path to your east and a door to your south.
+    \nThe starting room is north.""",
 
-    "exits": {"west": "Reception"},
+    "exits":  {"north": "Starter", "south": "Test3", "east": "Test2"},
 
-    "items": []
+    "items": [],
+
+    "interacts": []
 }
 
-room_parking = {
-    "name": "the parking lot",
+room_test2 = {
+    "name": "test room 2",
 
     "description":
-    """You are standing in the Queen's Buildings parking lot.
-You can go south to the COMSC reception, or east to the
-general office.""",
+    """You are now in Test Room 2.
+    \nThere is an NPC standing in the room.
+    \nThe exit back to Test Room 1 is to your west.""",
 
-    "exits": {"east": "Office", "south": "Reception"},
+    "exits": {"west": "Test1"},
 
-    "items": []
+    "items": [],
+
+    "interacts": [npc_test]
 }
 
-room_office = {
-    "name": "the general office",
+room_test3 = {
+    "name": "test room 3",
 
     "description":
-    """You are standing next to the cashier's till at
-30-36 Newport Road. The cashier looks at you with hope
-in their eyes. If you go west you can return to the
-Queen's Buildings.""",
+    """You are now in Test Room 3.
+    \nThere is nothing here.
+    \nThe exit back to Test Room 1 is back through the door north.""",
 
-    "exits": {"west": "Parking"},
+    "exits": {"north": "Test1"},
 
-    "items": [item_pen]
+    "items": [],
+
+    "interacts": []
 }
-
-
 
 rooms = {
-    "Reception": room_reception,
-    "Admins": room_admins,
-    "Tutor": room_tutor,
-    "Parking": room_parking,
-    "Office": room_office
+    "Starter": room_starter,
+    "Test1": room_test1,
+    "Test2": room_test2,
+    "Test3": room_test3,
 }

@@ -1,51 +1,27 @@
-item_id = {
-    "id": "id",
+"""
+This file stores all items that can be carried, used and equipped by the player.
+"""
 
-    "name": "id card",
+item_test1 = {
+    "id": "test1",
 
-    "description":
-    """You new shiny student ID card. Expires 1 June 2017.
-You wonder why they have printed a suicide hotline number on it?..."""
+    "name": "test item 1",
+
+    "description": "Starting Item"
 }
 
-item_laptop = {
-    "id": "laptop",
+item_test2 = {
+    "id": "test2",
 
-    "name": "laptop",
+    "name": "test item 2",
 
-    "description":
-    "It has seen better days. At least it has a WiFi card!"
+    "description": "Pickup"
 }
 
-item_money = {
-    "id": "money",
-
-    "name": "money",
-
-    "description":
-    "This wad of cash is barely enough to pay your tuition fees."
-}
-
-item_biscuits = {
-    "id": "biscuits",
-
-    "name": "a pack of biscuits",
-
-    "description": "A pack of biscuits."
-}
-
-item_pen = {
-    "id": "pen",
+item_test3 = {
+    "id": "test3",
     
-    "name": "a pen",
+    "name": "test item 3",
 
-    "description": "A basic ballpoint pen."
-}
-
-item_handbook = {
-    "id": "handbook",
-    
-    "name": "a student handbook",
-
-    "description": "This student handbook explains everything. Seriously."
+    "description": "Consumable (key)"
 }
