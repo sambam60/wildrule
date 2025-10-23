@@ -5,7 +5,26 @@ This file stores all the rooms and areas in the game.
 from items import *
 from interactions import *
 
+room_template = {
+    "id": "temp",
+
+    "name": "TEMPLATE ROOM",
+
+    "description":
+    """THIS IS USED AS A BASE FOR ADDING NEW ROOMS TO THE MAP""",
+
+    "exits": {},
+
+    "items": [],
+
+    "interacts": [],
+
+    "enemies": [],
+}
+
 room_starter = {
+    "id": "start",
+
     "name": "starting room",
 
     "description":
@@ -15,10 +34,14 @@ room_starter = {
 
     "items": [item_test2],
 
-    "interacts": []
+    "interacts": [],
+
+    "enemies": [],
 }
 
 room_test1 = {
+    "id": "test1",
+
     "name": "test room 1",
 
     "description":
@@ -30,10 +53,14 @@ room_test1 = {
 
     "items": [],
 
-    "interacts": []
+    "interacts": [],
+
+    "enemies": [],
 }
 
 room_test2 = {
+    "id": "test2",
+
     "name": "test room 2",
 
     "description":
@@ -45,10 +72,14 @@ room_test2 = {
 
     "items": [],
 
-    "interacts": [npc_test]
+    "interacts": [npc_test],
+
+    "enemies": [],
 }
 
 room_test3 = {
+    "id": "test3",
+
     "name": "test room 3",
 
     "description":
@@ -60,10 +91,13 @@ room_test3 = {
 
     "items": [],
 
-    "interacts": []
+    "interacts": [],
+
+    "enemies": [],
 }
 
 rooms = {
+    "Template": room_template, # MAKE SURE TO ADD NEW ROOMS TO THIS DICTIONARY
     "Starter": room_starter,
     "Test1": room_test1,
     "Test2": room_test2,

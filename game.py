@@ -15,7 +15,7 @@ def list_of_items(items):
     return item_name_list
 
 
-def print_room_items(room): # This function isn't being used at the moment. It may be used later though. - Syafiq
+def print_room_items(room): # This function isn't being used at the moment. It may be used later though.
     
     room_items = list_of_items(room["items"])
     if len(room_items) > 0:
@@ -53,6 +53,7 @@ def check_exit_availability(direction): # This function stores exits that can on
 def execute_go(direction): # Movement command
 
     global current_room
+    global room_change
 
     if check_exit_availability(direction) == False:
         return
@@ -65,18 +66,22 @@ def execute_go(direction): # Movement command
                 case "north":
                     exit = move(current_room["exits"], "north")
                     current_room = exit
+                    room_change = True
 
                 case "south":
                     exit = move(current_room["exits"], "south")
                     current_room = exit
+                    room_change = True
 
                 case "east":
                     exit = move(current_room["exits"], "east")
                     current_room = exit
+                    room_change = True
 
                 case "west":
                     exit = move(current_room["exits"], "west")
                     current_room = exit
+                    room_change = True
                     
         except KeyError:
             print("\nERROR: The inputted direction does not have a valid exit or does not exist.\n")
@@ -242,8 +247,6 @@ def menu(exits, room_items, inv_items):
 
 def move(exits, direction):
 
-    global room_change
-    room_change = True
     return rooms[exits[direction]]
 
 
