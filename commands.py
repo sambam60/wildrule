@@ -8,55 +8,7 @@ from map import rooms
 from player import *
 from items import *
 from interactions import *
-
-def execute_command(command):
-
-    if 0 == len(command):
-        return
-
-    match command[0]:
-
-        case "go":
-            if len(command) > 1:
-                execute_go(command[1])
-            else:
-                print("\nERROR: Please input a direction to go to.\n")
-
-        case "take":
-            if len(command) > 1:
-                execute_take(command[1])
-            else:
-                print("\nERROR: Please input an item to take.\n")
-
-        case "drop":
-            if len(command) > 1:
-                execute_drop(command[1])
-            else:
-                print("\nERROR: Please input an item to drop.\n")
-
-        case "help":
-            execute_help(current_room["exits"], current_room["items"], inventory)
-
-        case "inventory":
-            execute_inventory(inventory)
-
-        case "interact":
-            if len(command) > 1:
-                execute_interact(command[1])
-            else:
-                print("\nERROR: Please input something to interact with.\n")
-
-        case "use":
-            if len(command) > 1:
-                execute_use(command[1])
-            else:
-                print("\nERROR: Please input an item to use.\n")
-
-        case "quit":
-            exit()
-
-        case _:
-            print("\nERROR: Invalid input. Please enter 'help' for a list of valid commands.\n")
+from combat import *
 
 
 
@@ -64,6 +16,9 @@ def exit_leads_to(exits, direction):
 
     return rooms[exits[direction]]["name"]
 
+def is_valid_exit(exits, chosen_exit):
+
+    return chosen_exit in exits
 
 
 def check_exit_availability(direction): # This function stores exits that can only be accessed after certain game progress
@@ -85,66 +40,38 @@ def move(exits, direction):
     return rooms[exits[direction]]
 
 
-
-def execute_go(direction): # Movement command
-
-    global current_room
-    global room_change
-
-    if check_exit_availability(direction) == False:
-        return
-    
-    else:
-
-        try:
-            match direction:
-
-                case "north":
-                    exit = move(current_room["exits"], "north")
-                    current_room = exit
-                    room_change = True
-
-                case "south":
-                    exit = move(current_room["exits"], "south")
-                    current_room = exit
-                    room_change = True
-
-                case "east":
-                    exit = move(current_room["exits"], "east")
-                    current_room = exit
-                    room_change = True
-
-                case "west":
-                    exit = move(current_room["exits"], "west")
-                    current_room = exit
-                    room_change = True
-                    
-        except KeyError:
-            print("\nERROR: The inputted direction does not have a valid exit or does not exist.\n")
-
-
-
 def execute_take(item_id): # Take item command
 
     room_items = current_room["items"]
+    take_item = False
+
     for item in room_items:
         if item["id"] == item_id:
             room_items.remove(item)
             inventory.append(item)
             print(f"\nYou have taken the {item["name"]}.\n")
+            take_item = True
             break
 
+    if take_item == False:
+        print("\nError: That item is not in the current room or does not exist.\n")
 
 
 def execute_drop(item_id): # Drop item command
     
     room_items = current_room["items"]
+    drop_item = False
+
     for item in inventory:
         if item["id"] == item_id:
             inventory.remove(item)
             room_items.append(item)
             print(f"\nYou have dropped the {item["name"]}.\n")
+            drop_item = True
             break
+
+    if drop_item == False:
+        print("\nError: That item is not in your inventory or does not exist.\n")
 
 
 def execute_help(exits, room_items, inv_items): # Prints all valid commands that can be inputted
@@ -211,7 +138,6 @@ def execute_use(item_id): # Command for using items in the player's inventory
     for item in inventory:
         available_items.append(item["id"])
 
-    print(available_items, item_id)
     if not (item_id in available_items):
         print("\nError: That item is not in your inventory or does not exist.\n")
     else:
@@ -228,3 +154,9 @@ def execute_use(item_id): # Command for using items in the player's inventory
 
             case _:
                 print("\nError: That item cannot be used.\n")
+
+def execute_attack(enemy_id, attack_type):
+    attack_enemy(enemy_id, attack_type)
+
+def execute_dodge():
+    pass

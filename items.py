@@ -25,3 +25,26 @@ item_test3 = {
 
     "description": "Consumable (key)"
 }
+
+weapon_test = {
+    "id": "testweapon",
+
+    "name": "test weapon",
+
+    "description": "weapon",
+
+    "damage": 30,
+
+}
+
+armour_test = {
+
+    "id": "testarmour",
+
+    "name": "test armour",
+
+    "description": "armour",
+
+    "defence": 30,
+
+}

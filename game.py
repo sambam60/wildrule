@@ -30,23 +30,6 @@ def print_room(room): # Displays details of the current room when room changes o
     print(f"{room["description"]}\n")
 
 
-def is_valid_exit(exits, chosen_exit):
-
-    return chosen_exit in exits
-
-def check_exit_availability(direction): # This function stores exits that can only be accessed after certain game progress
-
-    match current_room["name"]:
-
-        case "test room 1":
-            if direction == "south" and obj_door["status"] == "Locked":
-                print("\nYou cannot go south because the door is locked.\n")
-                return False
-            
-        case _:
-            return True
-
-
 def menu(exits, room_items, inv_items):
 
     user_input = input("> ")
@@ -54,6 +37,112 @@ def menu(exits, room_items, inv_items):
 
     return normalised_user_input
 
+"""
+DO NOT DELETE/MOVE THE TWO FUNCTIONS execute_command AND execute_go BELLOW TO commands.py
+DELETING/ADDING THEM WILL BREAK THE MOVEMENT SYSTEM
+"""
+
+def execute_command(command):
+
+    if 0 == len(command):
+        return
+
+    match command[0]:
+
+        case "go":
+            if len(command) > 1:
+                execute_go(command[1])
+            else:
+                print("\nERROR: Please input a direction to go to.\n")
+
+        case "take":
+            if len(command) > 1:
+                execute_take(command[1])
+            else:
+                print("\nERROR: Please input an item to take.\n")
+
+        case "drop":
+            if len(command) > 1:
+                execute_drop(command[1])
+            else:
+                print("\nERROR: Please input an item to drop.\n")
+
+        case "help":
+            execute_help(current_room["exits"], current_room["items"], inventory)
+
+        case "inventory":
+            execute_inventory(inventory)
+
+        case "interact":
+            if len(command) > 1:
+                execute_interact(command[1])
+            else:
+                print("\nERROR: Please input something to interact with.\n")
+
+        case "use":
+            if len(command) > 1:
+                execute_use(command[1])
+            else:
+                print("\nERROR: Please input an item to use.\n")
+
+        case "attack":
+            if len(command) > 2:
+                execute_attack(command[1], command[2])
+            elif len(command) == 2:
+                print("\nERROR: Please specify an attack type.\n")
+            else:
+                print("\nERROR: Please specify the enemy to attack and the attack type.\n")
+
+        case "quit":
+            exit()
+
+        case "test":
+            print(room_change)
+            print(current_room)
+
+        case _:
+            print("\nERROR: Invalid input. Please enter 'help' for a list of valid commands.\n")
+
+def execute_go(direction): # Movement command
+
+    global current_room
+    global room_change
+
+    if check_exit_availability(direction) == False:
+        return
+    
+    else:
+
+        try:
+            match direction:
+
+                case "north":
+                    exit = move(current_room["exits"], "north")
+                    current_room = exit
+                    room_change = True
+
+                case "south":
+                    exit = move(current_room["exits"], "south")
+                    current_room = exit
+                    room_change = True
+
+                case "east":
+                    exit = move(current_room["exits"], "east")
+                    current_room = exit
+                    room_change = True
+
+                case "west":
+                    exit = move(current_room["exits"], "west")
+                    current_room = exit
+                    room_change = True
+                    
+        except KeyError:
+            print("\nERROR: The inputted direction does not have a valid exit or does not exist.\n")
+
+"""
+DO NOT DELETE/MOVE THE TWO FUNCTIONS execute_command AND execute_go ABOVE TO commands.py
+DELETING/ADDING THEM WILL BREAK THE MOVEMENT SYSTEM
+"""
 
 def main():
 
