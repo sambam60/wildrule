@@ -1,5 +1,5 @@
 from map import rooms
-from player import *
+import player
 from items import *
 from interactions import *
 from commands import *
@@ -23,12 +23,21 @@ def print_room_items(room): # This function isn't being used at the moment. It m
         print(f"There is {room_items} here.\n")
 
 
+def print_exit(direction, leads_to):
+    print("- GO " + direction.upper() + " to " + leads_to + ".")
+
+
 def print_room(room): # Displays details of the current room when room changes occur
 
     print("\n————————————————————————————————————————————————————————————————————————————————————————————————————\n")
     print(f" — {room["name"].upper()} — \n")
     print(f"{room["description"]}\n")
-
+    print_room_items(room)
+    print(f"You can go in the following directions:")    
+    for direction, room_id in room["exits"].items():
+        leads_to = rooms[room_id]["name"]
+        print_exit(direction, leads_to)
+    print("\n")
 
 def menu(exits, room_items, inv_items):
 
@@ -147,13 +156,11 @@ DELETING/ADDING THEM WILL BREAK THE MOVEMENT SYSTEM
 def main():
 
     while True:
-        global room_change
-
-        if room_change == True:
-            print_room(current_room)
-            room_change = False
+        if player.room_change == True:
+            print_room(player.current_room)
+            player.room_change = False
         print("What do you want to do?")
-        command = menu(current_room["exits"], current_room["items"], inventory)
+        command = menu(player.current_room["exits"], player.current_room["items"], player.inventory)
         execute_command(command)
 
 
