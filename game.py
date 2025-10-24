@@ -33,10 +33,6 @@ def print_room(room): # Displays details of the current room when room changes o
     print(f" — {room["name"].upper()} — \n")
     print(f"{room["description"]}\n")
     print_room_items(room)
-    print(f"You can go in the following directions:")    
-    for direction, room_id in room["exits"].items():
-        leads_to = rooms[room_id]["name"]
-        print_exit(direction, leads_to)
     print("\n")
 
 def menu(exits, room_items, inv_items):
