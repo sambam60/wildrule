@@ -1,8 +1,11 @@
 from map import rooms
 from items import *
 
+# WHEN USING THESE VARIABLES IN OTHER FILES, PLEASE USE player.<variable>
+
 current_room = rooms["Starter"]
-turn = 0
+current_turn = 0
+change_turn = False
 
 inventory = [item_test1]
 
@@ -14,7 +17,5 @@ equipment = {
 
 player_stats = {
     "health": 100,
-    "evasion": 0,
-},
-
-room_change = True
+    "evasion": 10,
+}

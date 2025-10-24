@@ -18,7 +18,7 @@ enemy_test = {
     "health": 100,
     "defence": 10,
     "evasion": 0,
-    "status": "idling",
+    "status": "idle",
 
     "attacks": [],
 
