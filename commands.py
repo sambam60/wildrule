@@ -8,7 +8,6 @@ from map import rooms
 import player
 from items import *
 from interactions import *
-from combat import *
 
 def execute_command(command):
 
