@@ -47,7 +47,7 @@ You can go EAST to the northeast corner of the forest, SOUTH to the forest's sou
         "west": "Forest_NW",
     },
 
-    "items": [item_test2],
+    "items": [weapon_test2, armour_test2],
     "interacts": [],
     "enemies": [],
 }

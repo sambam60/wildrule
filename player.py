@@ -8,17 +8,16 @@ current_turn = 0
 change_turn = False
 
 inventory = [item_test1]
+gold = 300
 
 equipment = {
-    "weapon": weapon_test,
-    "armour": armour_test,
-    "accessories": [],
-    "gold": 100
+    "weapon": weapon_default,
+    "armour": armour_default,
+    "accessory": accessory_default,
 }
 
 stats = {
     "health": 100,
-    "defence": equipment["armour"]["defence"],
     "evasion": 10,
 }
 

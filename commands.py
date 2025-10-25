@@ -24,16 +24,17 @@ def turn_change(function, *args): # CONTROLS FUNCTIONS THAT WILL RUN WHEN A TURN
         case "execute_wait":
             spawn_enemy()
 
-        case "execute_go":
+        case "print_room":
             spawn_enemy()
 
-        case "attack_enemy":
+        case "player_attack":
             if len(player.current_room["enemies"]) > 0:
                 if player.current_room["enemies"][0]["health"] >= 0:
                     enemy_attack()
 
         case "evade_attack":
             enemy_attack()
+
 
 
 def execute_command(command): # Command list
@@ -45,8 +46,7 @@ def execute_command(command): # Command list
 
         case "go":
             if len(command) > 1:
-                player.change_turn = True
-                turn_change(execute_go, command[1])
+                execute_go(command[1])
             else:
                 print("\nERROR: Please input a direction to go to.\n")
 
@@ -75,6 +75,13 @@ def execute_command(command): # Command list
         case "inventory":
             execute_inventory(player.inventory)
 
+        case "inspect":
+            if len(command) > 1:
+                execute_inspect(command[1])
+            else:
+                print("\nERROR: Please input something to inspect.")
+                print("You can inspect objects, enemies or items in your current room, or items from your inventory.\n")
+
         case "interact":
             if len(command) > 1:
                 execute_interact(command[1])
@@ -86,6 +93,18 @@ def execute_command(command): # Command list
                 execute_use(command[1])
             else:
                 print("\nERROR: Please input an item to use.\n")
+
+        case "equip":
+            if len(command) > 1:
+                execute_equip(command[1])
+            else:
+                print("\nERROR: Please input an item to equip.\n")
+
+        case "unequip":
+            if len(command) > 1:
+                execute_unequip(command[1])
+            else:
+                print("\nERROR: Please input an item to unequip.\n")
 
         case "attack":
             if len(command) > 2:
@@ -103,12 +122,10 @@ def execute_command(command): # Command list
             exit()
 
         case "test":
-            print(check_enemy_exists(enemy_bear))
+            print(player.current_room["explored"])
 
         case _:
-            print("\nERROR: Invalid input. Please enter 'help' for a list of valid commands.\n")
-
-
+            print(f"\nERROR: '{command[0]}' is not a valid command. Please enter 'help' for a list of valid commands.\n")
 
 # Helper Functions for different commands
 
@@ -157,81 +174,97 @@ def check_exit_availability(direction): # This function stores exits that can on
         case _:
             return True
         
-
-        
 def move(exits, direction):
 
     return rooms[exits[direction]]
 
 # Commands
 
+def explore_room(room):
+    if room["explored"] == False:
+        room["explored"] = True
+
 def execute_go(direction): # Movement command
     if check_exit_availability(direction) == False:
         return
     
     else:
-
         try:
             match direction:
 
                 case "north":
                     exit = move(player.current_room["exits"], "north")
                     player.current_room = exit
-                    print_room(player.current_room)
+                    player.change_turn = True
+                    turn_change(print_room, player.current_room)
+                    explore_room(player.current_room)
 
                 case "south":
                     exit = move(player.current_room["exits"], "south")
                     player.current_room = exit
-                    print_room(player.current_room)
+                    player.change_turn = True
+                    turn_change(print_room, player.current_room)
+                    explore_room(player.current_room)
 
                 case "east":
                     exit = move(player.current_room["exits"], "east")
                     player.current_room = exit
-                    print_room(player.current_room)
+                    player.change_turn = True
+                    turn_change(print_room, player.current_room)
+                    explore_room(player.current_room)
 
                 case "west":
                     exit = move(player.current_room["exits"], "west")
                     player.current_room = exit
-                    print_room(player.current_room)
-                    
+                    player.change_turn = True
+                    turn_change(print_room, player.current_room)
+                    explore_room(player.current_room)
+                        
+                case _:
+                    print(f"\nERROR: '{direction}' is not a valid exit or does not exist.\n")
+
         except KeyError:
-            print("\nERROR: The inputted direction does not have a valid exit or does not exist.\n")
+            print(f"\nERROR: The current room does not have a valid exit in the inputted direction '{direction}'.\n")
+
+
 
 def execute_wait():
     print("You waited for one turn.\n")
 
 
+
 def execute_take(item_id): # Take item command
 
     room_items = player.current_room["items"]
-    take_item = False
+
+    if len(player.inventory) == 8:
+        print("\nERROR: Your inventory is full. Please drop or store an item away if you want to pickup another item.\n")
+        return
+
     for item in room_items:
         if item["id"] == item_id:
             room_items.remove(item)
             player.inventory.append(item)
             print(f"\nYou have taken the {item["name"]}.\n")
-            take_item = True
-            break
+            return
 
-    if take_item == False:
-        print("\nError: That item is not in the current room or does not exist.\n")
+    print("\nERROR: That item is not in the current room or does not exist.\n")
+
 
 
 def execute_drop(item_id): # Drop item command
     
     room_items = player.current_room["items"]
-    drop_item = False
 
     for item in player.inventory:
         if item["id"] == item_id:
             player.inventory.remove(item)
             room_items.append(item)
             print(f"\nYou have dropped the {item["name"]}.\n")
-            drop_item = True
-            break
+            return
 
-    if drop_item == False:
-        print("\nError: That item is not in your inventory or does not exist.\n")
+    print("\nERROR: That item is not in your inventory or does not exist.\n")
+
 
 
 def execute_help(exits, room_items, inv_items): # Prints all valid commands that can be inputted
@@ -241,48 +274,92 @@ def execute_help(exits, room_items, inv_items): # Prints all valid commands that
     # Valid exits in the current room
     for direction in exits:
         print(f"GO {direction.upper()} to {exit_leads_to(exits, direction)}.")
-
-    # Take/drop items in your inventory
+    # Take items from current room
     for item in room_items:
         print(f"TAKE {item["id"].upper()} to take {item["name"]}.")
-    for item in inv_items:
-        print(f"DROP {item["id"].upper()} to drop your {item["name"]}.")
-
     # Valid interactions in the current room
     for interact in player.current_room["interacts"]:
         print(f"INTERACT {interact["id"].upper()} to interact with {interact["name"]}.")
+    # Valid interactions for enemies in the current room
+    for enemy in player.current_room["enemies"]:
+        print(f"ATTACK {player.current_room["enemies"][0]["id"].upper()} [attack type] to attack the {player.current_room["enemies"][0]["name"]}.")
 
     print("\nHELP for a list of available commands.")
+    print("MENU to view your player stats.")
+    print("INSPECT [id] to view the attributes of an object/item/enemy.")
     print("INVENTORY to view items in your inventory.")
-    print("USE [item] to use an item from your inventory.")
-    print("QUIT to close the program.\n")
+    print("\nDROP [item id] to drop an item from your inventory.")
+    print("USE [item id] to use an item from your inventory.")
+    print("EQUIP [item id] to equip an item from your inventory.")
+    print("UNEQUIP [item id] to unequip an item from your equipment.")
+    print("\nQUIT to close the program.\n")
 
-def test():
-    print(player.current_turn, player.change_turn)
+
+
+def execute_inspect(target_id):
+
+    room = player.current_room
+
+    if len(room["enemies"]) > 0:
+        if target_id == room["enemies"][0]["id"]:
+            enemy = room["enemies"][0]
+            print("\n — Inspection — \n")
+            print(f"NAME: {enemy["name"].title()}        ENEMY ID: {enemy["id"]}        TYPE: enemy")
+            print(f"DESCRIPTION: {enemy["description"]}")
+            print(f"HEALTH: {enemy["health"]}/{enemy["max_health"]}        DEFENCE: {enemy["defence"]}        EVASION: {enemy["evasion"]}")
+            print(f"NORMAL ATTACK DAMAGE: {enemy["normal_attack"]["damage"]}")
+            print(f"CHARGE ATTACK DAMAGE: {enemy["charge_attack"]["damage"]}        CHANCE: {enemy["charge_attack"]["chance"]}%        MISS CHANCE: {enemy["charge_attack"]["miss_multiplier"]}x")
+            print(f"COUNTER ATTACK DAMAGE: {enemy["counter_attack"]["damage"]}        CHANCE: {enemy["counter_attack"]["chance"]}%")
+            print(f"MAX GOLD DROP: {enemy["gold"]}")
+            print(f"AVAILABLE LOOT: {enemy["loot"]["item"]["name"].title()}        DROP CHANCE: {enemy["loot"]["chance"]}%")
+            print()
+            return
+        
+    if len(room["items"]) > 0:
+        for item in room["items"]:
+            if target_id == item["id"]:
+                print("\n — Inspection — \n")
+                print(f"NAME: {item["name"].title()}        ITEM ID: {item["id"]}        TYPE: {item["type"]}")
+                print(f"DESCRIPTION: {item["description"]}")
+                print()
+                return
+            
+    print(f"\nERROR: '{target_id.upper()}' is not a valid object/enemy/item that can be inspected.")
+    print("You can inspect objects, enemies or items in your current room, or items from your inventory.\n")
+
+
 
 def execute_menu():
 
     print("\n — Player Stats — \n")
     print(f"HEALTH: {player.stats["health"]}")
-    print(f"DEFENCE: {player.stats["defence"]}")
+    print(f"DAMAGE: {player.equipment["weapon"]["damage"]}")
+    print(f"DEFENCE: {player.equipment["armour"]["defence"]}")
     print(f"EVASION: {player.stats["evasion"]}")
-    print(f"WEAPON: {player.equipment["weapon"]["name"].upper()}")
-    print(f"ARMOUR: {player.equipment["armour"]["name"].upper()}")
+    print(f"GOLD: {player.gold}")
     print(f"\nYou are currently in {player.current_room["name"].upper()} on turn {player.current_turn}.\n")
+
 
 
 def execute_inventory(items): # Displays the current items in the player's inventory
 
-    print("\n — Your Inventory — \n")
+    print("\n — Your Equipment — \n")
+    print(f"WEAPON: {player.equipment["weapon"]["name"].title()} [{player.equipment["weapon"]["id"]}]    DAMAGE: {player.equipment["weapon"]["damage"]}")
+    print(f"ARMOUR: {player.equipment["armour"]["name"].title()} [{player.equipment["armour"]["id"]}]    DEFENCE: {player.equipment["armour"]["defence"]}")
+    print(f"ACCESSORY: {player.equipment["accessory"]["name"].title()} [{player.equipment["accessory"]["id"]}]   BUFF: {player.equipment["accessory"]["buff_desc"]}")
+    print(f"GOLD: {player.gold}")
+
+    print(f"\n — Your Inventory [{len(player.inventory)}/8] —")
+    print("FORMAT: <item name> [<item id> | <item type>] - <item description>\n")
     for item in items:
-        print(f"{item["name"].upper()} [{item["id"]}] - {item["description"]}\n")
+        print(f"{item["name"].title()} [{item["id"]} | {item["type"]}] - {item["description"]}\n")
 
 
 
-def execute_interact(interaction): # Command for interacting with special objects/NPCs in a room
+def execute_interact(interaction_id): # Command for interacting with special objects/NPCs in a room
 
     for object in player.current_room["interacts"]:
-        if interaction == object["id"]:
+        if interaction_id == object["id"]:
 
             match object["id"]:
 
@@ -292,14 +369,13 @@ def execute_interact(interaction): # Command for interacting with special object
                     else:
                         print("\nThe NPC gave you a key (test item 3).\n")
                         npc_test["status"] = True
-                        player.inventory.append(item_test3)
                     break
 
                 case _:
                     print("error message!!!")
 
         else:
-            print("\nError: You cannot interact with that.\n")
+            print("\nERROR: You cannot interact with that.\n")
 
 
 
@@ -310,7 +386,7 @@ def execute_use(item_id): # Command for using items in the player's inventory
         available_items.append(item["id"])
 
     if not (item_id in available_items):
-        print("\nError: That item is not in your inventory or does not exist.\n")
+        print("\nERROR: That item is not in your inventory or does not exist.\n")
     else:
 
         match item_id:
@@ -324,28 +400,117 @@ def execute_use(item_id): # Command for using items in the player's inventory
                     print("\nYou cannot use this item here.\n")
 
             case _:
-                print("\nError: That item cannot be used.\n")
+                print("\nERROR: That item cannot be used.\n")
+
+
+
+def execute_equip(item_id):
+
+    for inv_item in player.inventory:
+        if inv_item["id"] == item_id:
+
+            if (inv_item["type"] != "weapon") and (inv_item["type"] != "armour") and (inv_item["type"] != "accessory"):
+                print(f"\nERROR: '{item_id.upper()}' cannot be equipped.\n")
+                print(inv_item["type"])
+                return
+            
+            else:
+                player.inventory.remove(inv_item)
+                item_type = inv_item["type"]          
+
+                for equip_item in player.equipment.items():
+
+                    if equip_item[1]["type"] == item_type:
+                        equip_item_type = equip_item[1]["type"]
+
+                        match equip_item_type:
+                            case "weapon":
+                                if equip_item[1] == weapon_default:
+                                    break
+                                else:
+                                    player.inventory.append(equip_item[1])
+                                break
+                            
+                            case "armour":
+                                if equip_item[1] == armour_default:
+                                    break
+                                else:
+                                    player.inventory.append(equip_item)
+                                break
+                            
+                            case "accessory":
+                                if equip_item[1] == accessory_default:
+                                    break
+                                else:
+                                    player.inventory.append(equip_item[1])
+                                break                  
+
+                player.equipment.update({item_type: inv_item})
+                print(f"\nYou have equipped {item_id.upper()} as your {item_type}.\n")
+                return
+
+
+
+def execute_unequip(item_id):
+
+    if item_id == "default":
+        print("\nERROR: You cannot unequip that.\n")
+        return
+    
+    if len(player.inventory) == 8:
+        print("\nERROR: Your inventory is full. Please drop or store an item away if you want to unequip an item.\n")
+        return
+    
+    for item in player.equipment.items():
+
+        if item[1]["id"] == item_id:
+            item_type = item[1]["type"]
+
+            match item_type:
+                case "weapon":
+                    player.equipment.update({"weapon": weapon_default})
+                    player.inventory.append(item[1])
+                    print(f"\nYou unequipped your {item[1]["name"].upper()}\n")
+                    return
+                
+                case "armour":
+                    player.equipment.update({"armour": armour_default})
+                    player.inventory.append(item[1])
+                    print(f"\nYou unequipped your {item[1]["name"].upper()}\n")
+                    return
+                
+                case "accessory":
+                    player.equipment.update({"accessory": accessory_default})
+                    player.inventory.append(item[1])
+                    print(f"\nYou unequipped your {item[1]["name"].upper()}\n")
+                    return
+                
+    print(f"\nERROR: '{item_id.upper()}' is not an item you have equipped.\n")
+
+
 
 def execute_attack(enemy_id, attack_type):
     room = player.current_room
 
     if len(room["enemies"]) == 0:
-        print("\nError: Specified enemy is not in this room or does not exist.\n")
+        print("\nERROR: Specified enemy is not in this room or does not exist.\n")
 
     else:
         room_enemy = room["enemies"][0]["id"]
         if room_enemy != enemy_id:
-            print("\nError: Specified enemy is not in this room or does not exist.\n")
+            print("\nERROR: Specified enemy is not in this room or does not exist.\n")
 
         elif (attack_type != "normal") and (attack_type != "charge") and (attack_type != "counter"):
-            print(f"\nError: {attack_type} is not a valid attack type (Normal, Charge or Counter).\n")
+            print(f"\nERROR: '{attack_type}' is not a valid attack type (Normal, Charge or Counter).\n")
         
         else:
-            turn_change(attack_enemy, enemy_id, attack_type)
+            turn_change(player_attack, enemy_id, attack_type)
+
+
 
 def execute_evade():
     if len(player.current_room["enemies"]) > 0:
         player.change_turn = True
         turn_change(evade_attack)
     else:
-        print("\nError: You cannot evade an attack when there are no enemies nearby.\n")
+        print("\nERROR: You cannot evade an attack when there are no enemies nearby.\n")

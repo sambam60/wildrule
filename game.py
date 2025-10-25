@@ -24,14 +24,14 @@ def main():
 
         if player.stats["health"] > 0:
 
-            print("What do you want to do?")
+            print("What do you want to do? [Enter 'help' for a list of available commands]")
             command = menu(player.current_room["exits"], player.current_room["items"], player.inventory)
             execute_command(command)
         
         else:
 
             print("\n————————————————————————————————————————————————————————————————————————————————————————————————————")
-            print("GAME OVER: YOU HAVE BEEN KILLED")
+            print(f"GAME OVER: YOU HAVE BEEN KILLED BY THE {player.current_room["enemies"][0]["name"].upper()}")
             print("————————————————————————————————————————————————————————————————————————————————————————————————————\n")
             exit()
 

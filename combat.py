@@ -49,19 +49,19 @@ def spawn_enemy():
             case "Forest":
                 spawn_chance = random.randint(1, 100)
 
-                if spawn_chance <= 10:
+                if spawn_chance <= 20:
                     does_enemy_exist = check_enemy_exists(enemy_bull)
                     if does_enemy_exist == False:
                         room["enemies"].append(enemy_bull)
                         print(f"A wild {enemy_bull["name"].upper()} spots you!\n")
 
-                elif spawn_chance > 10 and spawn_chance <= 30:
+                elif spawn_chance > 20 and spawn_chance <= 40:
                     does_enemy_exist = check_enemy_exists(enemy_bear)
                     if does_enemy_exist == False:
                         room["enemies"].append(enemy_bear)
                         print(f"A wild {enemy_bear["name"].upper()} spots you!\n")
 
-                elif spawn_chance > 30 and spawn_chance <= 50:
+                elif spawn_chance > 40 and spawn_chance <= 60:
                     does_enemy_exist = check_enemy_exists(enemy_goose)
                     if does_enemy_exist == False:
                         room["enemies"].append(enemy_goose)
@@ -69,6 +69,15 @@ def spawn_enemy():
 
     else:
         enemy_attack() # If current room already has an enemy, the enemy will attack the player instead
+
+
+
+def player_buffs(): # unfinished
+    accessory = player.equipment["accessory"]
+
+    match accessory:
+        case accessory_ivory:
+            return 3
 
 
 
@@ -98,8 +107,9 @@ def calculate_damage(attacker, attack_type):
                     return final_damage
                 
                 case "charge": # Charge attack deals 2.5x normal attack damage
+                    charge_multiplier = player_buffs() # buff accounting will move to a different function later
                     damage_absorbed = (random.randint(0, enemy_defence) / 100)
-                    final_damage = (player_damage - (player_damage * damage_absorbed)) * 2.5
+                    final_damage = (player_damage - (player_damage * damage_absorbed)) * charge_multiplier
                     return final_damage
                 
                 case "counter": # Counter attack deals 2x normal damage if enemy is charging up a charge attack, if not then counter attack deals 0.5x damage
@@ -243,6 +253,7 @@ def enemy_attack():
     
     if player.evade_attack == True:
         print(f"You successfully evaded the {enemy_name.upper()}'s attack!\n")
+        enemy_charge_attack["charge"] = False
         player.evade_attack = False
         return
 
@@ -251,6 +262,7 @@ def enemy_attack():
         attack_evaded = calculate_evade("player", "charge")
         if attack_evaded == True:
             print(f"You evaded {enemy_name.upper().upper()}'s charge attack!\n")
+            enemy_charge_attack["charge"] = False
 
         else:
 
@@ -270,6 +282,7 @@ def enemy_attack():
                 attack_evaded = calculate_evade("player", "counter")
                 if attack_evaded == True:
                     print(f"You evaded {enemy_name.upper().upper()}'s counter attack!\n")
+                    enemy_charge_attack["charge"] = False
 
                 else:
                     damage_dealt = round(calculate_damage("enemy", "counter"), 1)
@@ -283,6 +296,7 @@ def enemy_attack():
                 attack_evaded = calculate_evade("player", "counter")
                 if attack_evaded == True:
                     print(f"You evaded {enemy_name.upper().upper()}'s counter attack!\n")
+                    enemy_charge_attack["charge"] = False
 
                 else:
 
@@ -303,6 +317,7 @@ def enemy_attack():
             attack_evaded = calculate_evade("player", "normal")
             if attack_evaded == True:
                 print(f"You evaded {enemy_name.upper().upper()}'s normal attack!\n")
+                enemy_charge_attack["charge"] = False
 
             else:
                 damage_dealt = round(calculate_damage("enemy", "normal"), 1)
@@ -313,7 +328,7 @@ def enemy_attack():
 
 
 
-def attack_enemy(enemy_id, attack_type):
+def player_attack(enemy_id, attack_type):
 
     """
     This functions handles how the player attacks an enemy.
@@ -341,16 +356,14 @@ def attack_enemy(enemy_id, attack_type):
                 print(f"You attacked {enemy.upper()} and dealt {damage_dealt} damage.")
 
                 if selected_enemy["health"] <= 0:
-                    print(f"{enemy.upper()} was killed.\n")
-                    room_enemies.remove(selected_enemy)
-                    selected_enemy["health"] = selected_enemy["max_health"]
+                    enemy_killed(selected_enemy)
                 else:
                     print(f"{enemy.upper()} now has {round(selected_enemy["health"], 1)} health.\n")
 
         case "charge":
 
             if player.charge_attack == False:
-                print(f"\nYou readied your weapon for a charge attack.\nEnter this command again to finalise your attack.\n")
+                print(f"You readied your weapon for a charge attack.\nEnter this command again to finalise your attack.\n")
                 player.charge_attack = True
 
             else:
@@ -358,13 +371,11 @@ def attack_enemy(enemy_id, attack_type):
 
                     damage_dealt = round(calculate_damage("player", "charge"), 1)
                     selected_enemy["health"] = selected_enemy["health"] - damage_dealt
-                    print(f"\nYou charged at {enemy.upper()} and dealt {damage_dealt} damage.")
+                    print(f"You charged at {enemy.upper()} and dealt {damage_dealt} damage.")
                     player.charge_attack = False
 
                     if selected_enemy["health"] <= 0:
-                        print(f"{enemy.upper()} was killed.\n")
-                        room_enemies.remove(selected_enemy)
-                        selected_enemy["health"] = selected_enemy["max_health"]
+                        enemy_killed(selected_enemy)
                     else:
                         print(f"{enemy.upper()} now has {round(selected_enemy["health"], 1)} health.\n")
 
@@ -375,18 +386,40 @@ def attack_enemy(enemy_id, attack_type):
                     damage_dealt = round(calculate_damage("player", "counter"), 1)
                     selected_enemy["health"] = selected_enemy["health"] - damage_dealt
 
-                    print(f"\nYou countered {enemy.upper()} and dealt {damage_dealt} damage.")
+                    print(f"You countered {enemy.upper()} and dealt {damage_dealt} damage.")
 
                     if selected_enemy["charge_attack"]["charge"] == False:
                         print(f"Since {enemy.upper()} was not charging up an attack, your counter attack dealt less damage.")
 
                     if selected_enemy["health"] <= 0:
-                        print(f"{enemy.upper()} was killed.\n")
-                        room_enemies.remove(selected_enemy)
-                        selected_enemy["health"] = selected_enemy["max_health"]
+                        enemy_killed(selected_enemy)
                     else:
                         print(f"{enemy.upper()} now has {round(selected_enemy["health"], 1)} health.\n")
 
+
+
+def enemy_killed(enemy):
+    room_enemies = player.current_room["enemies"]
+    room_enemies.remove(enemy)
+    enemy["health"] = enemy["max_health"]
+
+    gold_rng = random.randint(0, int(enemy["gold"] * 0.5))
+    gold_gained = enemy["gold"] - gold_rng
+    player.gold = (player.gold + gold_gained)
+
+    if enemy["loot"]["item"] != None:
+        loot_rng = random.randint(0, 100)
+        if loot_rng <= enemy["loot"]["chance"]:
+            player.inventory.append(enemy["loot"]["item"])
+            print(f"\n{enemy["name"].upper()} was killed! You gained {gold_gained} gold.")
+            print(f"The {enemy["name"].upper()} dropped a {enemy["loot"]["item"]["name"].upper()}! You took it.\n")
+            enemy["loot"]["item"] = None
+        else:
+            print(f"\n{enemy["name"].upper()} was killed! You gained {gold_gained} gold.\n")
+    else:
+        print(f"\n{enemy["name"].upper()} was killed! You gained {gold_gained} gold.\n")
+    
+    enemy["charge_attack"]["charge"] = False
 
 
 def evade_attack(): # Function for the 'evade' command

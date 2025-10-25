@@ -8,6 +8,8 @@ Attacks corresponds to a list of attacks the enemy can do.
 Loot corresponds to a list of items the enemy can drop when killed. Enemies should only drop 1 item at a time.
 """
 
+from items import *
+
 enemy_goose = {
 
     "id": "goose",
@@ -25,8 +27,8 @@ enemy_goose = {
     "charge_attack": { "damage": 0, "chance": 0, "charge": False, "miss_multiplier": 0, },
     "counter_attack": { "damage": 25, "chance": 30, },
 
-    "gold": 50,
-    "loot": { "item": "", "chance": 0, }
+    "gold": 30,
+    "loot": { "item": None, "chance": 0, }
 
     # we can add more attributes if needed
 }
@@ -49,7 +51,7 @@ enemy_bear = {
     "counter_attack": { "damage": 0, "chance": 0, },
 
     "gold": 50,
-    "loot": { "item": "", "chance": 0, }
+    "loot": { "item": None, "chance": 0, }
 
     # we can add more attributes if needed
 }
@@ -63,6 +65,7 @@ enemy_bull = {
     "description": "placeholder",
 
     "health": 100,
+    "max_health": 100, # This attribute is used when respawning enemies
     "defence": 20,
     "evasion": 0,
     
@@ -70,8 +73,8 @@ enemy_bull = {
     "charge_attack": { "damage": 50, "chance": 100, "charge": False, "miss_multiplier": 3, },
     "counter_attack": { "damage": 0, "chance": 0, },
 
-    "gold": 65,
-    "loot": { "item": "", "chance": 0, }
+    "gold": 70,
+    "loot": { "item": accessory_ivory, "chance": 50, }
 
     # we can add more attributes if needed
 }
