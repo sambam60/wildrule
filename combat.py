@@ -1,11 +1,25 @@
+"""
+This file handles the entire combat system of the game.
+Attacks can be of 3 attack types: Normal, Charge or Counter attacks.
+Normal attacks have no special attributes, and are based off base damage values from its attacker.
+Charge attacks have increased damage compared to normal attacks, but takes a turn to charge up before dealing its full damage.
+Counter attacks have increased damage if the target is charging up a charge attack, but has decreased damage if target is not charging up a charge attack.
+Attacks also have a small chance of being evaded/missed, based off the attacker's attack type and the target's evasion stat ('evade' command guarantees attack evasion).
+"""
+
 import random
 import player
 from map import rooms
 from enemies import *
 
-# Combat system still very early in development right now
 
-def check_enemy_exists(enemy): # Checks if an enemy already exists in one of the rooms on the map
+
+def check_enemy_exists(enemy): 
+
+    """
+    This function checks if a specific enemy already exists in one of the rooms on the map.
+    If an enemy already exists in a room, it cannot spawn in another room at the same time.
+    """
 
     enemy_exists = False
     all_rooms = rooms.items()
@@ -18,7 +32,14 @@ def check_enemy_exists(enemy): # Checks if an enemy already exists in one of the
 
     return enemy_exists
 
-def spawn_enemy(): # Enemy spawning function based on current area
+
+
+def spawn_enemy():
+
+    """
+    This function handles how enemies are spawned in the current room, based on the room's area type.
+    Most areas should have 3 unique enemies, each with different chances of spawning.
+    """
 
     room = player.current_room
     if len(room["enemies"]) == 0:
@@ -47,11 +68,16 @@ def spawn_enemy(): # Enemy spawning function based on current area
                         print(f"A wild {enemy_goose["name"].upper()} spots you!\n")
 
     else:
-        enemy_attack() # If enemy already in current room, enemy will try and attack the player
+        enemy_attack() # If current room already has an enemy, the enemy will attack the player instead
 
 
 
-def calculate_damage(attacker, attack_type): # Calculates how much damage an attack deals to its target
+def calculate_damage(attacker, attack_type):
+
+    """
+    This helper function is used to calculate the magnitude of damage an attacker does to its target based on the chosen attack type.
+    Damage is first chosen based on the attack type, then altered based on specific conditions such as target defence values.
+    """
 
     player_damage = player.equipment["weapon"]["damage"]
     player_defence = player.equipment["armour"]["defence"]
@@ -64,7 +90,7 @@ def calculate_damage(attacker, attack_type): # Calculates how much damage an att
     final_damage = 0
 
     match attacker:
-        case "player":
+        case "player": # When the player is attacking an enemy
             match attack_type:
                 case "normal": # Damage based from player's current weapon
                     damage_absorbed = (random.randint(0, enemy_defence) / 100)
@@ -86,7 +112,7 @@ def calculate_damage(attacker, attack_type): # Calculates how much damage an att
                     final_damage = (player_damage - (player_damage * damage_absorbed)) * damage_multiplier
                     return final_damage
         
-        case "enemy":
+        case "enemy": # When an enemy is attacking the player
             match attack_type:
                 case "normal": # Damage based from enemy normal damage stat
                     damage_absorbed = (random.randint(0, player_defence) / 100)
@@ -113,7 +139,12 @@ def calculate_damage(attacker, attack_type): # Calculates how much damage an att
     
 
 
-def calculate_evade(target, opposition_attack_type): # Calculates if an attack is evaded by its target
+def calculate_evade(target, opposition_attack_type):
+
+    """
+    This helper function is used to calculate whether an attack is evaded by its target.
+    Chance of evasion is affected by target evasion value, attack type etc.
+    """
 
     enemy = player.current_room["enemies"][0]
     enemy_evasion = enemy["evasion"]
@@ -121,7 +152,7 @@ def calculate_evade(target, opposition_attack_type): # Calculates if an attack i
     enemy_charge = enemy["charge_attack"]["charge"]
 
     match target:
-        case "player":
+        case "player": # Player evasion chance
             match opposition_attack_type:
                 case "normal": # For enemy normal attacks, chance of player evasion is equal to the player's evasion stat
 
@@ -159,9 +190,10 @@ def calculate_evade(target, opposition_attack_type): # Calculates if an attack i
 
                     
                 
-        case "enemy":
+        case "enemy": # Enemy evasion chance
             match opposition_attack_type:
                 case "normal": # For player normal attacks, chance of enemy evasion is equal to the enemy's evasion stat
+
                     evasion_rng = random.randint(0, 100)
                     if evasion_rng <= enemy_evasion:
                         return True
@@ -169,6 +201,7 @@ def calculate_evade(target, opposition_attack_type): # Calculates if an attack i
                         return False
                 
                 case "charge": # For player charge attacks, chance of enemy evasion is doubled compared to normal attack evasion chance
+
                     evasion_rng = random.randint(0, 100)
                     if evasion_rng <= (enemy_evasion * 2):
                         return True
@@ -192,6 +225,10 @@ def calculate_evade(target, opposition_attack_type): # Calculates if an attack i
 
 
 def enemy_attack():
+
+    """
+    This function handles enemy attacks towards the player.
+    """
 
     player_damage = player.equipment["weapon"]["damage"]
     player_defence = player.equipment["armour"]["defence"]
@@ -278,6 +315,10 @@ def enemy_attack():
 
 def attack_enemy(enemy_id, attack_type):
 
+    """
+    This functions handles how the player attacks an enemy.
+    """
+
     room_enemies = player.current_room["enemies"]
     selected_enemy = None
     
@@ -348,7 +389,7 @@ def attack_enemy(enemy_id, attack_type):
 
 
 
-def evade_attack():
+def evade_attack(): # Function for the 'evade' command
     player.evade_attack = True
 
 """def take_damage(damage):
