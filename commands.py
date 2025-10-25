@@ -8,66 +8,35 @@ from map import rooms
 import player
 from items import *
 from interactions import *
-from commands import *
+from combat import *
 
-def execute_command(command):
-
-    if 0 == len(command):
-        return
-
-    match command[0]:
-
-        case "go":
-            if len(command) > 1:
-                execute_go(command[1])
-            else:
-                print("\nERROR: Please input a direction to go to.\n")
-
-        case "take":
-            if len(command) > 1:
-                execute_take(command[1])
-            else:
-                print("\nERROR: Please input an item to take.\n")
-
-        case "drop":
-            if len(command) > 1:
-                execute_drop(command[1])
-            else:
-                print("\nERROR: Please input an item to drop.\n")
-
-        case "help":
-            execute_help(player.current_room["exits"], player.current_room["items"], player.inventory)
-
-        case "inventory":
-            execute_inventory(player.inventory)
-
-        case "interact":
-            if len(command) > 1:
-                execute_interact(command[1])
-            else:
-                print("\nERROR: Please input something to interact with.\n")
-
-        case "use":
-            if len(command) > 1:
-                execute_use(command[1])
-            else:
-                print("\nERROR: Please input an item to use.\n")
-
-        case "quit":
-            exit()
-
-        case _:
-            print("\nERROR: Invalid input. Please enter 'help' for a list of valid commands.\n")
-
-def turn_change(function, *args):
+def turn_change(function, *args): # CONTROLS FUNCTIONS THAT WILL RUN WHEN A TURN CHANGE COMMAND IS SUCCESSFULLY RUN
 
     if player.change_turn == True:
         print("\n————————————————————————————————————————————————————————————————————————————————————————————————————\n")
         function(*args)
+        function_name = function.__name__
+        #print(function_name) # for debugging
         player.current_turn = player.current_turn + 1
         player.change_turn = False
 
-def execute_command(command):
+    match function_name:
+        case "execute_wait":
+            spawn_enemy()
+
+        case "execute_go":
+            spawn_enemy()
+
+        case "attack_enemy":
+            if len(player.current_room["enemies"]) > 0:
+                if player.current_room["enemies"][0]["health"] >= 0:
+                    enemy_attack()
+
+        case "evade_attack":
+            enemy_attack()
+
+
+def execute_command(command): # Command list
 
     if 0 == len(command):
         return
@@ -76,13 +45,14 @@ def execute_command(command):
 
         case "go":
             if len(command) > 1:
-                execute_go(command[1])
+                player.change_turn = True
+                turn_change(execute_go, command[1])
             else:
                 print("\nERROR: Please input a direction to go to.\n")
 
         case "wait":
             player.change_turn = True
-            execute_wait()
+            turn_change(execute_wait)
 
         case "take":
             if len(command) > 1:
@@ -119,17 +89,21 @@ def execute_command(command):
 
         case "attack":
             if len(command) > 2:
+                player.change_turn = True
                 execute_attack(command[1], command[2])
             elif len(command) == 2:
                 print("\nERROR: Please specify an attack type.\n")
             else:
                 print("\nERROR: Please specify the enemy to attack and the attack type.\n")
 
+        case "evade":
+            execute_evade()
+
         case "quit":
             exit()
 
         case "test":
-            test()
+            print(check_enemy_exists(enemy_bear))
 
         case _:
             print("\nERROR: Invalid input. Please enter 'help' for a list of valid commands.\n")
@@ -151,13 +125,19 @@ def print_room_items(room):
     
     room_items = list_of_items(room["items"])
     if len(room_items) > 0:
-        print(f"There is {room_items} here.\n")
+        print(f"There is {room_items} on the ground.\n")
+
+def print_room_enemies(room):
+    room_enemies = room["enemies"]
+    if len(room_enemies) > 0:
+        print(f"A wild {room_enemies[0]["name"].upper()} spots you!")
 
 def print_room(room): # Displays details of the current room when room changes occur
 
     print(f" — {room["name"].upper()} — \n")
     print(f"{room["description"]}\n")
     print_room_items(room)
+    print_room_enemies(room)
 
 def exit_leads_to(exits, direction):
     return rooms[exits[direction]]["name"]
@@ -186,7 +166,6 @@ def move(exits, direction):
 # Commands
 
 def execute_go(direction): # Movement command
-
     if check_exit_availability(direction) == False:
         return
     
@@ -198,72 +177,28 @@ def execute_go(direction): # Movement command
                 case "north":
                     exit = move(player.current_room["exits"], "north")
                     player.current_room = exit
-                    player.change_turn = True
-                    turn_change(print_room, player.current_room)
+                    print_room(player.current_room)
 
                 case "south":
                     exit = move(player.current_room["exits"], "south")
                     player.current_room = exit
-                    player.change_turn = True
-                    turn_change(print_room, player.current_room)
+                    print_room(player.current_room)
 
                 case "east":
                     exit = move(player.current_room["exits"], "east")
                     player.current_room = exit
-                    player.change_turn = True
-                    turn_change(print_room, player.current_room)
+                    print_room(player.current_room)
 
                 case "west":
                     exit = move(player.current_room["exits"], "west")
                     player.current_room = exit
-                    player.change_turn = True
-                    turn_change(print_room, player.current_room)
+                    print_room(player.current_room)
                     
         except KeyError:
             print("\nERROR: The inputted direction does not have a valid exit or does not exist.\n")
 
 def execute_wait():
-
-    if player.change_turn == True:
-        print("\n————————————————————————————————————————————————————————————————————————————————————————————————————\n")
-        print("\nYou waited for one turn.\n")
-        player.current_turn = player.current_turn + 1
-        player.change_turn = False
-
-
-def execute_go(direction): # Movement command
-
-    if check_exit_availability(direction) == False:
-        return
-    
-    else:
-
-        try:
-            match direction:
-
-                case "north":
-                    target_room = move(player.current_room["exits"], "north")
-                    player.current_room = target_room
-                    player.room_change = True
-
-                case "south":
-                    target_room = move(player.current_room["exits"], "south")
-                    player.current_room = target_room
-                    player.room_change = True
-
-                case "east":
-                    target_room = move(player.current_room["exits"], "east")
-                    player.current_room = target_room
-                    player.room_change = True
-
-                case "west":
-                    target_room = move(player.current_room["exits"], "west")
-                    player.current_room = target_room
-                    player.room_change = True
-                    
-        except KeyError:
-            print("\nERROR: The inputted direction does not have a valid exit or does not exist.\n")
-
+    print("You waited for one turn.\n")
 
 
 def execute_take(item_id): # Take item command
@@ -323,18 +258,17 @@ def execute_help(exits, room_items, inv_items): # Prints all valid commands that
     print("QUIT to close the program.\n")
 
 def test():
-    print(player.current_turn)
+    print(player.current_turn, player.change_turn)
 
 def execute_menu():
 
-    print("\n — Info Menu — \n")
-    print(f"You are currently in {player.current_room["name"].upper()} on turn {player.current_turn}.")
-
     print("\n — Player Stats — \n")
-    print(f"HEALTH: {player.player_stats[0]["health"]}")
+    print(f"HEALTH: {player.stats["health"]}")
+    print(f"DEFENCE: {player.stats["defence"]}")
+    print(f"EVASION: {player.stats["evasion"]}")
     print(f"WEAPON: {player.equipment["weapon"]["name"].upper()}")
     print(f"ARMOUR: {player.equipment["armour"]["name"].upper()}")
-    print(f"EVASION: {player.player_stats[0]["evasion"]}")
+    print(f"\nYou are currently in {player.current_room["name"].upper()} on turn {player.current_turn}.\n")
 
 
 def execute_inventory(items): # Displays the current items in the player's inventory
@@ -393,8 +327,25 @@ def execute_use(item_id): # Command for using items in the player's inventory
                 print("\nError: That item cannot be used.\n")
 
 def execute_attack(enemy_id, attack_type):
-    #attack_enemy(enemy_id, attack_type)
-    pass
+    room = player.current_room
 
-def execute_dodge():
-    pass
+    if len(room["enemies"]) == 0:
+        print("\nError: Specified enemy is not in this room or does not exist.\n")
+
+    else:
+        room_enemy = room["enemies"][0]["id"]
+        if room_enemy != enemy_id:
+            print("\nError: Specified enemy is not in this room or does not exist.\n")
+
+        elif (attack_type != "normal") and (attack_type != "charge") and (attack_type != "counter"):
+            print(f"\nError: {attack_type} is not a valid attack type (Normal, Charge or Counter).\n")
+        
+        else:
+            turn_change(attack_enemy, enemy_id, attack_type)
+
+def execute_evade():
+    if len(player.current_room["enemies"]) > 0:
+        player.change_turn = True
+        turn_change(evade_attack)
+    else:
+        print("\nError: You cannot evade an attack when there are no enemies nearby.\n")

@@ -12,10 +12,15 @@ inventory = [item_test1]
 equipment = {
     "weapon": weapon_test,
     "armour": armour_test,
-    "accessories": []
+    "accessories": [],
+    "gold": 100
 }
 
-player_stats = {
+stats = {
     "health": 100,
+    "defence": equipment["armour"]["defence"],
     "evasion": 10,
 }
+
+charge_attack = False
+evade_attack = False
