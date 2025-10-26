@@ -9,6 +9,7 @@ import player
 from items import *
 from interactions import *
 from combat import *
+from minimap import *
 
 def turn_change(function, *args): # CONTROLS FUNCTIONS THAT WILL RUN WHEN A TURN CHANGE COMMAND IS SUCCESSFULLY RUN
 
@@ -69,6 +70,9 @@ def execute_command(command): # Command list
         case "help":
             execute_help(player.current_room["exits"], player.current_room["items"], player.inventory)
 
+        case "map":
+            execute_map()
+
         case "menu":
             execute_menu()
 
@@ -122,7 +126,7 @@ def execute_command(command): # Command list
             exit()
 
         case "test":
-            print(player.current_room["explored"])
+            print(draw_minimap(player.current_room))
 
         case _:
             print(f"\nERROR: '{command[0]}' is not a valid command. Please enter 'help' for a list of valid commands.\n")
@@ -237,7 +241,7 @@ def execute_take(item_id): # Take item command
 
     room_items = player.current_room["items"]
 
-    if len(player.inventory) == 8:
+    if len(player.inventory) == 12:
         print("\nERROR: Your inventory is full. Please drop or store an item away if you want to pickup another item.\n")
         return
 
@@ -285,6 +289,7 @@ def execute_help(exits, room_items, inv_items): # Prints all valid commands that
         print(f"ATTACK {player.current_room["enemies"][0]["id"].upper()} [attack type] to attack the {player.current_room["enemies"][0]["name"]}.")
 
     print("\nHELP for a list of available commands.")
+    print("MAP to view the world map and your exploration progress.")
     print("MENU to view your player stats.")
     print("INSPECT [id] to view the attributes of an object/item/enemy.")
     print("INVENTORY to view items in your inventory.")
@@ -295,6 +300,18 @@ def execute_help(exits, room_items, inv_items): # Prints all valid commands that
     print("\nQUIT to close the program.\n")
 
 
+
+def execute_map():
+    print("\n — World Map — \n")
+    print(draw_minimap(player.current_room))
+    print("\n — Key — \n")
+    print(f"[X] = Your current position -> {player.current_room["name"].upper()}")
+    print("[?] = Unexplored area")
+    print("[F] = Forest tile")
+    print("[T] = Tundra tile")
+    print("[P] = Plains tile")
+    print("[V] = Village tile")
+    print()
 
 def execute_inspect(target_id):
 
@@ -349,10 +366,10 @@ def execute_inventory(items): # Displays the current items in the player's inven
     print(f"ACCESSORY: {player.equipment["accessory"]["name"].title()} [{player.equipment["accessory"]["id"]}]   BUFF: {player.equipment["accessory"]["buff_desc"]}")
     print(f"GOLD: {player.gold}")
 
-    print(f"\n — Your Inventory [{len(player.inventory)}/8] —")
+    print(f"\n — Your Inventory [{len(player.inventory)}/12] —")
     print("FORMAT: <item name> [<item id> | <item type>] - <item description>\n")
     for item in items:
-        print(f"{item["name"].title()} [{item["id"]} | {item["type"]}] - {item["description"]}\n")
+        print(f"{item["name"].title()} [{item["id"]} | {item["type"]}] -> {item["description"]}\n")
 
 
 
@@ -457,7 +474,7 @@ def execute_unequip(item_id):
         print("\nERROR: You cannot unequip that.\n")
         return
     
-    if len(player.inventory) == 8:
+    if len(player.inventory) == 12:
         print("\nERROR: Your inventory is full. Please drop or store an item away if you want to unequip an item.\n")
         return
     

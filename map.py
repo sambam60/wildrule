@@ -262,7 +262,7 @@ igloos_west = {
 
     "id": "igloos_w",
     "name": "Icy Igloos West",
-    "area": "Tundra",
+    "area": "Village",
     "explored": False,
 
     "description":
@@ -285,7 +285,7 @@ igloos_east = {
 
     "id": "igloos_e",
     "name": "Icy Igloos East",
-    "area": "Tundra",
+    "area": "Village",
     "explored": False,
 
     "description":

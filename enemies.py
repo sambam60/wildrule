@@ -74,7 +74,7 @@ enemy_bull = {
     "counter_attack": { "damage": 0, "chance": 0, },
 
     "gold": 70,
-    "loot": { "item": accessory_ivory, "chance": 50, }
+    "loot": { "item": accessory_ivory, "chance": 15, }
 
     # we can add more attributes if needed
 }

@@ -7,7 +7,7 @@ current_room = rooms["Starter"]
 current_turn = 0
 change_turn = False
 
-inventory = [item_test1]
+inventory = []
 gold = 300
 
 equipment = {
