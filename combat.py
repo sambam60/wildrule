@@ -44,10 +44,10 @@ def spawn_enemy():
     room = player.current_room
     if len(room["enemies"]) == 0:
 
+        spawn_chance = random.randint(1, 100)
         match room["area"]:
 
             case "Forest":
-                spawn_chance = random.randint(1, 100)
 
                 if spawn_chance <= 20:
                     does_enemy_exist = check_enemy_exists(enemy_bull)
@@ -67,13 +67,66 @@ def spawn_enemy():
                         room["enemies"].append(enemy_goose)
                         print(f"A wild {enemy_goose["name"].upper()} spots you!\n")
 
+                elif spawn_chance > 60 and spawn_chance <= 65:
+                    does_enemy_exist = check_enemy_exists(miniboss_giant)
+                    if does_enemy_exist == False:
+                        room["enemies"].append(miniboss_giant)
+                        print(f"A rare {miniboss_giant["name"].upper()} towers overhead, and locks its sights upon you.\n")
+
+            case "Tundra":
+
+                if spawn_chance <= 25:
+                    does_enemy_exist = check_enemy_exists(enemy_polarbear)
+                    if does_enemy_exist == False:
+                        room["enemies"].append(enemy_polarbear)
+                        print(f"A wild {enemy_polarbear["name"].upper()} spots you!\n")
+
+                elif spawn_chance > 25 and spawn_chance <= 50:
+                    does_enemy_exist = check_enemy_exists(enemy_leopard)
+                    if does_enemy_exist == False:
+                        room["enemies"].append(enemy_leopard)
+                        print(f"A wild {enemy_leopard["name"].upper()} spots you!\n")
+
+                elif spawn_chance > 50 and spawn_chance <= 75:
+                    does_enemy_exist = check_enemy_exists(enemy_owl)
+                    if does_enemy_exist == False:
+                        room["enemies"].append(enemy_owl)
+                        print(f"A wild {enemy_owl["name"].upper()} spots you!\n")
+
+                elif spawn_chance > 75 and spawn_chance <= 80:
+                    does_enemy_exist = check_enemy_exists(miniboss_werewolf)
+                    if does_enemy_exist == False:
+                        room["enemies"].append(miniboss_werewolf)
+                        print(f"A rare {miniboss_werewolf["name"].upper()} rushes towards you!\n")
+
+            case "Plains":
+
+                if spawn_chance <= 25:
+                    does_enemy_exist = check_enemy_exists(enemy_fox)
+                    if does_enemy_exist == False:
+                        room["enemies"].append(enemy_fox)
+                        print(f"A wild {enemy_fox["name"].upper()} spots you!\n")
+
+                elif spawn_chance > 25 and spawn_chance <= 50:
+                    does_enemy_exist = check_enemy_exists(enemy_rhino)
+                    if does_enemy_exist == False:
+                        room["enemies"].append(enemy_rhino)
+                        print(f"A wild {enemy_rhino["name"].upper()} spots you!\n")
+
+                elif spawn_chance > 50 and spawn_chance <= 75:
+                    does_enemy_exist = check_enemy_exists(enemy_elephant)
+                    if does_enemy_exist == False:
+                        room["enemies"].append(enemy_elephant)
+                        print(f"A wild {enemy_elephant["name"].upper()} spots you!\n")
+
+                elif spawn_chance > 75 and spawn_chance <= 80:
+                    does_enemy_exist = check_enemy_exists(miniboss_python)
+                    if does_enemy_exist == False:
+                        room["enemies"].append(miniboss_python)
+                        print(f"A rare {miniboss_python["name"].upper()} slithers behind you!\n")
+
     else:
         enemy_attack() # If current room already has an enemy, the enemy will attack the player instead
-
-
-
-def player_buffs():
-    return 2.5
 
 
 
@@ -92,7 +145,22 @@ def calculate_damage(attacker, attack_type):
     enemy_normal_attack = enemy["normal_attack"]
     enemy_charge_attack = enemy["charge_attack"]
     enemy_counter_attack = enemy["counter_attack"]
+
     final_damage = 0
+
+    player_charge_multiplier = 2.5
+    player_counter_multiplier = 2
+    player_defence_increase = 0
+
+    match player.equipment["accessory"]["id"]:
+        case "horn":
+            player_charge_multiplier = 3
+        case "feather":
+            player_counter_multiplier = 2.5
+        case "hide":
+            player_defence_increase = 10
+        case _:
+            pass
 
     match attacker:
         case "player": # When the player is attacking an enemy
@@ -103,14 +171,14 @@ def calculate_damage(attacker, attack_type):
                     return final_damage
                 
                 case "charge": # Charge attack deals 2.5x normal attack damage
-                    charge_multiplier = player_buffs() # buff accounting will move to a different function later
+                    damage_multiplier = player_charge_multiplier
                     damage_absorbed = (random.randint(0, enemy_defence) / 100)
-                    final_damage = (player_damage - (player_damage * damage_absorbed)) * charge_multiplier
+                    final_damage = (player_damage - (player_damage * damage_absorbed)) * damage_multiplier
                     return final_damage
                 
                 case "counter": # Counter attack deals 2x normal damage if enemy is charging up a charge attack, if not then counter attack deals 0.5x damage
                     if enemy_charge_attack["charge"] == True:
-                        damage_multiplier = 2
+                        damage_multiplier = player_counter_multiplier
                     else:
                         damage_multiplier = 0.5
                         
@@ -121,12 +189,12 @@ def calculate_damage(attacker, attack_type):
         case "enemy": # When an enemy is attacking the player
             match attack_type:
                 case "normal": # Damage based from enemy normal damage stat
-                    damage_absorbed = (random.randint(0, player_defence) / 100)
+                    damage_absorbed = (random.randint(0, (player_defence + player_defence_increase)) / 100)
                     final_damage = enemy_normal_attack["damage"] - (enemy_normal_attack["damage"] * damage_absorbed)
                     return final_damage
                 
                 case "charge": # Damage based from enemy charge damage stat
-                    damage_absorbed = (random.randint(0, player_defence) / 100)
+                    damage_absorbed = (random.randint(0, (player_defence + player_defence_increase)) / 100)
                     final_damage = (enemy_charge_attack["damage"] - (enemy_charge_attack["damage"] * damage_absorbed))
                     return final_damage
                 
@@ -136,7 +204,7 @@ def calculate_damage(attacker, attack_type):
                     else:
                         damage_multiplier = 0.5
                         
-                    damage_absorbed = (random.randint(0, player_defence) / 100)
+                    damage_absorbed = (random.randint(0, (player_defence + player_defence_increase)) / 100)
                     base_damage = enemy_counter_attack["damage"]
                     final_damage = (base_damage - (base_damage * damage_absorbed)) * damage_multiplier
                     return final_damage
@@ -157,6 +225,13 @@ def calculate_evade(target, opposition_attack_type):
     enemy_evasion = enemy["evasion"]
     enemy_charge_miss = enemy["charge_attack"]["miss_multiplier"]
     enemy_charge = enemy["charge_attack"]["charge"]
+    player_evasion_increase = 0
+
+    match player.equipment["accessory"]["id"]:
+        case "paw":
+            player_evasion_increase = 25
+        case _:
+            pass
 
     match target:
         case "player": # Player evasion chance
@@ -164,7 +239,7 @@ def calculate_evade(target, opposition_attack_type):
                 case "normal": # For enemy normal attacks, chance of player evasion is equal to the player's evasion stat
 
                     evasion_rng = random.randint(0, 100)
-                    player_evasion_chance = player.stats["evasion"]
+                    player_evasion_chance = player.stats["evasion"] + player_evasion_increase
 
                     if evasion_rng <= player_evasion_chance:
                         return True
@@ -174,7 +249,7 @@ def calculate_evade(target, opposition_attack_type):
                 case "charge": # For enemy charge attacks, chance of player evasion is multiplied by enemy charge attack miss chance multiplier
 
                     evasion_rng = random.randint(0, 100)
-                    player_evasion_chance = player.stats["evasion"] * enemy_charge_miss
+                    player_evasion_chance = (player.stats["evasion"] + player_evasion_increase) * enemy_charge_miss
 
                     if evasion_rng <= player_evasion_chance:
                         return True
@@ -186,9 +261,9 @@ def calculate_evade(target, opposition_attack_type):
                     evasion_rng = random.randint(0, 100)
 
                     if player.charge_attack == True:
-                        player_evasion_chance = player.stats["evasion"] * 0.5
+                        player_evasion_chance = (player.stats["evasion"] + player_evasion_increase) * 0.5
                     else:
-                        player_evasion_chance = player.stats["evasion"] * 2
+                        player_evasion_chance = (player.stats["evasion"] + player_evasion_increase) * 2
 
                     if evasion_rng <= player_evasion_chance:
                         return True
@@ -400,7 +475,7 @@ def enemy_killed(enemy):
     room_enemies.remove(enemy)
     enemy["health"] = enemy["max_health"]
 
-    gold_rng = random.randint(0, int(enemy["gold"] * 0.5))
+    gold_rng = random.randint(0, int(enemy["gold"] * 0.25))
     gold_gained = enemy["gold"] - gold_rng
     player.gold = (player.gold + gold_gained)
 
@@ -421,139 +496,3 @@ def enemy_killed(enemy):
 
 def evade_attack(): # Function for the 'evade' command
     player.evade_attack = True
-
-"""def take_damage(damage):
-    global health
-    global enemy_posture
-    global player_posture
-    health -= damage
-    player_posture-=1
-    enemy_posture=3
-    if health < 0:
-        health = 0
-    return health
-
-
-def deal_damage(damage):
-    global enemy_health
-    global enemy_posture
-    global player_posture
-    enemy_health -= damage
-    enemy_posture-=1
-    player_posture=3
-    if enemy_health < 0:
-        enemy_health = 0
-    return enemy_health
-
-
-def posture_break(enemy_posture,player_posture):
-    print(f"Your posture is {player_posture}")
-    print(f"Enemy posture is {enemy_posture}")
-    if enemy_posture <=0:
-        deal_damage(50)
-        print("Enemy's posture is broken! You dealt extra damage!")
-    if player_posture <=0:
-        take_damage(50)
-        print("Your posture is broken! Enemy dealt extra damage!")
-
-enemy_prompts={
-    "Counter":"Enemy is watching you closely",
-    "Quick":"Enemy is rushing towards you",
-    "Charge":"Enemy is charging up for a big attack"
-}
-
-def enemy_prompt(enemy_attack):
-    print(enemy_prompts.get(enemy_attack))
-
-
-"""
-"""
-def enemy_prompt(enemy_attack):
-    if enemy_attack==attack_types[0]:
-        print("Enemy is watching you closely")
-    elif enemy_attack==attack_types[1]:
-        print("Enemy is rushing towards you")
-    else:
-        print("Enemy is charging up for a big attack")
-"""
-"""
-
-
-
-def quick_attack(enemy_attack):
-
-    if enemy_attack.lower() == attack_types[0].lower():
-        take_damage(counterdmg)
-        posture_break(enemy_posture,player_posture)
-        print(f"Enemy countered! Player health is now {health}.")
-    elif enemy_attack.lower() == attack_types[2].lower():
-        deal_damage(quickdmg)
-        posture_break(enemy_posture,player_posture)
-        print(f"Enemy wasn't ready player got a hit Enemy health is now {enemy_health}.")
-    else:
-        deal_damage(10)
-        take_damage(10)
-        print(f"Both players rushed! Player health is now {health}, Enemy health is now {enemy_health}.")
-
-def counter_attack(enemy_attack):
-
-    if enemy_attack.lower() == attack_types[2].lower():
-        take_damage(chargedmg)
-        posture_break(enemy_posture,player_posture)
-        print(f"Enemy rushed you! Player health is now {health}.")
-    elif enemy_attack.lower() == attack_types[1].lower():
-        deal_damage(counterdmg)
-        posture_break(enemy_posture,player_posture)
-        print(f"Enemy got countered Enemy health is now {enemy_health}.")
-    else:
-        print("Both players waited, no damage dealt.")
-def charge_attack(enemy_attack):
-
-    if enemy_attack.lower() == attack_types[0].lower():
-        deal_damage(chargedmg)
-        posture_break(enemy_posture,player_posture)
-        print(f"Enemy waited too long and got hit! Enemy health is now {enemy_health}.")
-    elif enemy_attack.lower() == attack_types[1].lower():
-        take_damage(quickdmg)
-        posture_break(enemy_posture,player_posture)
-        print(f"Enemy rushed through your charge! Player health is now {health}.")
-    else:
-        deal_damage(20)
-        take_damage(20)
-
-        print(f"Both players charged! Player health is now {health}, Enemy health is now {enemy_health}.")
- 
-
-
-
-while health > 0 and enemy_health > 0:
-    enemy_attack=random.choice(attack_types)
-    enemy_prompt(enemy_attack)
-    while True:
-       selected_attack = input("Enter attack type (Counter, Quick, Charge): ").strip().lower()
-       if selected_attack in [attack.lower() for attack in attack_types]:
-          break
-       print(f"Invalid attack type. Please choose from: {', '.join(attack_types)}")
-     
-    
-    if selected_attack.lower() ==attack_types[1].lower():
-      quick_attack(enemy_attack)
-      
-    elif selected_attack.lower() ==attack_types[0].lower():
-      counter_attack(enemy_attack)
-      
-    elif selected_attack.lower() ==attack_types[2].lower():
-      charge_attack(enemy_attack)
-      
-    
-    
-    if health <=0 and enemy_health <= 0:
-        print("Draw!")
-        break
-    elif enemy_health <= 0:
-        print("Enemy has been defeated!")
-        break
-    elif health <= 0:
-        print("Player has been defeated!")
-        break
-"""

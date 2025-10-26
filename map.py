@@ -9,10 +9,9 @@ from enemies import *
 # TUTORIAL ROOMS
 
 room_starter = {
+
     "id": "start",
-
-    "name": "Starting Room",
-
+    "name": "Forest Entrance",
     "area": "Forest",
     "explored": False,
 
@@ -42,12 +41,13 @@ forest_north = {
 You can go EAST to the northeast corner of the forest, SOUTH to the forest's southern side or WEST to the northwest corner.""",
 
     "exits": {
+        "north": "Stater",
         "south": "Forest_S",
         "east": "Forest_NE",
         "west": "Forest_NW",
     },
 
-    "items": [weapon_test2, armour_test2],
+    "items": [],
     "interacts": [],
     "enemies": [],
 }

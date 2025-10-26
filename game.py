@@ -20,11 +20,6 @@ RESET = "\033[0m"
 
 
 
-# when True, narrative printing should avoid slow typewriter and just speak/print
-TTS_ENABLED = False
-
- 
-
 def list_of_items(items):
 
     item_list = []
@@ -34,73 +29,7 @@ def list_of_items(items):
 
     return item_name_list
 
-def print_slowly(text, delay=0.03):
-    """Print text character by character with a small delay. Press 'S' or spacebar to skip."""
-    skip_queue = queue.Queue()
-    stop_event = threading.Event()
-    
-    def get_input():
-        try:
-            import msvcrt  # Windows
-            while not stop_event.is_set():
-                if msvcrt.kbhit():
-                    key = msvcrt.getch().decode('utf-8').lower()
-                    if key in ['s', ' ']:
-                        skip_queue.put(True)
-                        break
-        except ImportError:
-            try:
-                # Only use raw mode if interactive TTY
-                if sys.stdin.isatty():
-                    import termios, tty  # Unix/Linux/Mac
-                    import select
-                    fd = sys.stdin.fileno()
-                    old_settings = termios.tcgetattr(fd)
-                    try:
-                        tty.setraw(sys.stdin.fileno())
-                        while not stop_event.is_set():
-                            if select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], []):
-                                char = sys.stdin.read(1).lower()
-                                if char in ['s', ' ']:
-                                    skip_queue.put(True)
-                                    break
-                    finally:
-                        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-            except Exception:
-                # Non-interactive or unsupported terminal; skip skip-key feature
-                pass
-    
-    # Start input thread only in interactive terminals
-    input_thread = None
-    if sys.stdin.isatty():
-        input_thread = threading.Thread(target=get_input, daemon=True)
-        input_thread.start()
-    
-    # Print text character by character
-    for idx, char in enumerate(text):
-        print(char, end='', flush=True)
-        time.sleep(delay)
-        
-        # Check if skip was requested
-        try:
-            skip_queue.get_nowait()
-            # Skip was requested, print remaining text immediately
-            remaining_text = text[idx + 1:]
-            if remaining_text:
-                print(remaining_text, end='', flush=True)
-            break
-        except queue.Empty:
-            continue
-    
-    # Ensure input thread stops and terminal settings are restored
-    stop_event.set()
-    try:
-        if input_thread is not None:
-            input_thread.join(timeout=0.1)
-    except Exception:
-        pass
 
-    print()  # Add newline at the end
 
 def banner():
     ascii_art = """         _________ _        ______   _______           _        _______ 
@@ -117,48 +46,6 @@ def banner():
         time.sleep(0.2)
     
 
-
-
-def print_room_items(room): # This function isn't being used at the moment. It may be used later though.
-    
-    room_items = list_of_items(room["items"])
-    if len(room_items) > 0:
-        print(f"There is {room_items} here.\n")
-
-
-def print_exit(direction, leads_to):
-    print("- GO " + direction.upper() + " to " + leads_to + ".")
-
-
-def print_room(room): # Displays details of the current room when room changes occur
-
-    print("\n————————————————————————————————————————————————————————————————————————————————————————————————————\n")
-    say_text(f" — {room['name'].upper()} — ")
-    # Normalise any incidental indentation/newlines in multi-line descriptions
-    description_text = textwrap.dedent(room["description"]).strip()
-    def _wrap_block(block):
-        return textwrap.fill(
-            block.strip(),
-            width=90,
-            replace_whitespace=True,
-            drop_whitespace=True,
-            break_long_words=False,
-            break_on_hyphens=False,
-        )
-    wrapped_lines = [_wrap_block(p) for p in description_text.split("\n") if p.strip() != ""]
-    wrapped_text = "\n".join(wrapped_lines)
-    say_text(wrapped_text)
-    print_room_items(room)
-    print()
-
-
-def say_text(text: str):
-    """print text if tts on or type slow"""
-    if TTS_ENABLED:
-        print(text)
-        tts.speak(text)
-    else:
-        print_slowly(text)
 
 def menu(exits, room_items, inv_items):
 
@@ -250,20 +137,11 @@ def main():
 
             print("\n————————————————————————————————————————————————————————————————————————————————————————————————————\n")
             print_room(player.current_room)
+            player.current_turn = 1
             player.room_change = False
-        # GAME OVER check before prompting
-        if player.stats.get("health", 0) <= 0:
-            print("\n————————————————————————————————————————————————————————————————————————————————————————————————————")
-            if player.current_room.get("enemies") and len(player.current_room["enemies"]) > 0:
-                print(f"{RED}GAME OVER: YOU HAVE BEEN KILLED BY THE {player.current_room['enemies'][0]['name'].upper()}{RESET}")
-            else:
-                print(f"{RED}GAME OVER: YOU HAVE DIED.{RESET}")
-            print("————————————————————————————————————————————————————————————————————————————————————————————————————\n")
-            exit()
 
-        # show map and hp before asking for input
-        draw_minimap(player.current_room)
         player.print_health()
+        print(f"TURN: {player.current_turn}")
         print("What do you want to do?")
         # Use voice input if enabled; fallback handled inside
         def _menu(_exits, _room_items, _inv_items):

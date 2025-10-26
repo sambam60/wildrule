@@ -10,6 +10,16 @@ from items import *
 from interactions import *
 from combat import *
 from minimap import draw_minimap
+import time
+import sys
+import threading
+import queue
+import textwrap
+import tts
+import voice_input
+
+# when True, narrative printing should avoid slow typewriter and just speak/print
+TTS_ENABLED = False
 
 def turn_change(function, *args): # CONTROLS FUNCTIONS THAT WILL RUN WHEN A TURN CHANGE COMMAND IS SUCCESSFULLY RUN
 
@@ -122,6 +132,9 @@ def execute_command(command): # Command list
         case "evade":
             execute_evade()
 
+        case "dodge":
+            execute_evade()
+
         case "quit":
             exit()
 
@@ -131,7 +144,7 @@ def execute_command(command): # Command list
         case _:
             print(f"\nERROR: '{command[0]}' is not a valid command. Please enter 'help' for a list of valid commands.\n")
 
-# Helper Functions for different commands
+
 
 def list_of_items(items):
 
@@ -142,29 +155,135 @@ def list_of_items(items):
 
     return item_name_list
 
+
+
 def print_room_items(room):
     
     room_items = list_of_items(room["items"])
     if len(room_items) > 0:
         print(f"There is {room_items} on the ground.\n")
 
+
+
 def print_room_enemies(room):
     room_enemies = room["enemies"]
     if len(room_enemies) > 0:
         print(f"A wild {room_enemies[0]["name"].upper()} spots you!")
 
+
+
+def print_slowly(text, delay=0.03):
+    """Print text character by character with a small delay. Press 'SPACE' to skip."""
+    skip_queue = queue.Queue()
+    stop_event = threading.Event()
+    
+    def get_input():
+        try:
+            import msvcrt  # Windows
+            while not stop_event.is_set():
+                if msvcrt.kbhit():
+                    key = msvcrt.getch().decode('utf-8').lower()
+                    if key in [' ']:
+                        skip_queue.put(True)
+                        break
+        except ImportError:
+            try:
+                # Only use raw mode if interactive TTY
+                if sys.stdin.isatty():
+                    import termios, tty  # Unix/Linux/Mac
+                    import select
+                    fd = sys.stdin.fileno()
+                    old_settings = termios.tcgetattr(fd)
+                    try:
+                        tty.setraw(sys.stdin.fileno())
+                        while not stop_event.is_set():
+                            if select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], []):
+                                char = sys.stdin.read(1).lower()
+                                if char in ['s', ' ']:
+                                    skip_queue.put(True)
+                                    break
+                    finally:
+                        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+            except Exception:
+                # Non-interactive or unsupported terminal; skip skip-key feature
+                pass
+    
+    # Start input thread only in interactive terminals
+    input_thread = None
+    if sys.stdin.isatty():
+        input_thread = threading.Thread(target=get_input, daemon=True)
+        input_thread.start()
+    
+    # Print text character by character
+    for idx, char in enumerate(text):
+        print(char, end='', flush=True)
+        time.sleep(delay)
+        
+        # Check if skip was requested
+        try:
+            skip_queue.get_nowait()
+            # Skip was requested, print remaining text immediately
+            remaining_text = text[idx + 1:]
+            if remaining_text:
+                print(remaining_text, end='', flush=True)
+            break
+        except queue.Empty:
+            continue
+    
+    # Ensure input thread stops and terminal settings are restored
+    stop_event.set()
+    try:
+        if input_thread is not None:
+            input_thread.join(timeout=0.1)
+    except Exception:
+        pass
+
+    print()  # Add newline at the end
+
+
+
 def print_room(room): # Displays details of the current room when room changes occur
 
-    print(f" — {room["name"].upper()} — \n")
-    print(f"{room["description"]}\n")
+    say_text(f" — {room['name'].upper()} — \n")
+    # Normalise any incidental indentation/newlines in multi-line descriptions
+    description_text = textwrap.dedent(room["description"]).strip()
+    def _wrap_block(block):
+        return textwrap.fill(
+            block.strip(),
+            width=90,
+            replace_whitespace=True,
+            drop_whitespace=True,
+            break_long_words=False,
+            break_on_hyphens=False,
+        )
+    wrapped_lines = [_wrap_block(p) for p in description_text.split("\n") if p.strip() != ""]
+    wrapped_text = "\n".join(wrapped_lines)
+    say_text(wrapped_text)
     print_room_items(room)
     print_room_enemies(room)
+    print()
+
+
+
+def say_text(text: str):
+    """print text if tts on or type slow"""
+    if TTS_ENABLED:
+        print(text)
+        tts.speak(text)
+    else:
+        print_slowly(text)
+
+
 
 def exit_leads_to(exits, direction):
     return rooms[exits[direction]]["name"]
 
+
+
 def is_valid_exit(exits, chosen_exit):
     return chosen_exit in exits
+
+
 
 def check_exit_availability(direction): # This function stores exits that can only be accessed after certain game progress
 
@@ -178,6 +297,8 @@ def check_exit_availability(direction): # This function stores exits that can on
         case _:
             return True
         
+
+
 def move(exits, direction):
 
     return rooms[exits[direction]]
@@ -241,7 +362,7 @@ def execute_take(item_id): # Take item command
 
     room_items = player.current_room["items"]
 
-    if len(player.inventory) == 12:
+    if len(player.inventory) == 16:
         print("\nERROR: Your inventory is full. Please drop or store an item away if you want to pickup another item.\n")
         return
 
@@ -287,6 +408,7 @@ def execute_help(exits, room_items, inv_items): # Prints all valid commands that
     # Valid interactions for enemies in the current room
     for enemy in player.current_room["enemies"]:
         print(f"ATTACK {player.current_room["enemies"][0]["id"].upper()} [attack type] to attack the {player.current_room["enemies"][0]["name"]}.")
+        print(f"DODGE/EVADE to try and dodge the {player.current_room["enemies"][0]["id"].upper()}'s oncoming attack.")
 
     print("\nHELP for a list of available commands.")
     print("MAP to view the world map and your exploration progress.")
@@ -353,10 +475,10 @@ def execute_inspect(target_id):
 def execute_menu():
 
     print("\n — Player Stats — \n")
-    print(f"HEALTH: {player.stats["health"]}")
-    print(f"DAMAGE: {player.equipment["weapon"]["damage"]}")
-    print(f"DEFENCE: {player.equipment["armour"]["defence"]}")
-    print(f"EVASION: {player.stats["evasion"]}")
+    player.print_health()
+    print(f"BASE DAMAGE: {player.equipment["weapon"]["damage"]}")
+    print(f"BASE DEFENCE: {player.equipment["armour"]["defence"]}")
+    print(f"BASE EVASION: {player.stats["evasion"]}")
     print(f"GOLD: {player.gold}")
     print(f"\nYou are currently in {player.current_room["name"].upper()} on turn {player.current_turn}.\n")
 
@@ -370,8 +492,8 @@ def execute_inventory(items): # Displays the current items in the player's inven
     print(f"ACCESSORY: {player.equipment["accessory"]["name"].title()} [{player.equipment["accessory"]["id"]}]   BUFF: {player.equipment["accessory"]["buff_desc"]}")
     print(f"GOLD: {player.gold}")
 
-    print(f"\n — Your Inventory [{len(player.inventory)}/12] —")
-    print("FORMAT: <item name> [<item id> | <item type>] - <item description>\n")
+    print(f"\n — Your Inventory [{len(player.inventory)}/16] —")
+    print("FORMAT: (item name) [ (item id) | (item type) ] -> (item description)\n")
     for item in items:
         print(f"{item["name"].title()} [{item["id"]} | {item["type"]}] -> {item["description"]}\n")
 
@@ -478,7 +600,7 @@ def execute_unequip(item_id):
         print("\nERROR: You cannot unequip that.\n")
         return
     
-    if len(player.inventory) == 12:
+    if len(player.inventory) == 16:
         print("\nERROR: Your inventory is full. Please drop or store an item away if you want to unequip an item.\n")
         return
     

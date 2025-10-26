@@ -4,8 +4,9 @@ from items import *
 current_room = rooms["Starter"]
 current_turn = 0
 change_turn = False
+room_change = True
 
-inventory = [item_test1]
+inventory = [weapon_dev, armour_dev]
 
 equipment = {
     "weapon": weapon_default,
@@ -15,15 +16,13 @@ equipment = {
 
 stats = {
     "health": 100,
-    "evasion": 0,
+    "max_health": 100,
+    "evasion": 10,
 }
 
 gold = 0
 charge_attack = False
 evade_attack = False
-
-room_change = True
-
 
 def print_health():
     """Print the player's health as hearts: 10 hearts, each worth 10 HP, with gaps of one space between hearts."""
@@ -46,4 +45,4 @@ def print_health():
     # Join with a single space between each heart
     hearts = ([heart_full] * full_hearts) + ([heart_empty] * empty_hearts)
     hearts_str = " ".join(hearts)
-    print(f"HP: {hearts_str}")
+    print(f"HP: {round(stats["health"], 1)}/{stats["max_health"]} | {hearts_str}")
