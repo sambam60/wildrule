@@ -72,12 +72,8 @@ def spawn_enemy():
 
 
 
-def player_buffs(): # unfinished
-    accessory = player.equipment["accessory"]
-
-    match accessory:
-        case accessory_ivory:
-            return 3
+def player_buffs():
+    return 2.5
 
 
 
@@ -140,8 +136,9 @@ def calculate_damage(attacker, attack_type):
                     else:
                         damage_multiplier = 0.5
                         
-                    damage_absorbed = (random.randint(0, enemy_defence) / 100)
-                    final_damage = (enemy_counter_attack["damage"] - (player_damage * damage_absorbed)) * damage_multiplier
+                    damage_absorbed = (random.randint(0, player_defence) / 100)
+                    base_damage = enemy_counter_attack["damage"]
+                    final_damage = (base_damage - (base_damage * damage_absorbed)) * damage_multiplier
                     return final_damage
                 
                 case "dodge":
@@ -261,7 +258,7 @@ def enemy_attack():
 
         attack_evaded = calculate_evade("player", "charge")
         if attack_evaded == True:
-            print(f"You evaded {enemy_name.upper().upper()}'s charge attack!\n")
+            print(f"You evaded {enemy_name.upper()}'s charge attack!\n")
             enemy_charge_attack["charge"] = False
 
         else:
@@ -281,7 +278,7 @@ def enemy_attack():
 
                 attack_evaded = calculate_evade("player", "counter")
                 if attack_evaded == True:
-                    print(f"You evaded {enemy_name.upper().upper()}'s counter attack!\n")
+                    print(f"You evaded {enemy_name.upper()}'s counter attack!\n")
                     enemy_charge_attack["charge"] = False
 
                 else:
@@ -295,7 +292,7 @@ def enemy_attack():
 
                 attack_evaded = calculate_evade("player", "counter")
                 if attack_evaded == True:
-                    print(f"You evaded {enemy_name.upper().upper()}'s counter attack!\n")
+                    print(f"You evaded {enemy_name.upper()}'s counter attack!\n")
                     enemy_charge_attack["charge"] = False
 
                 else:
@@ -316,7 +313,7 @@ def enemy_attack():
 
             attack_evaded = calculate_evade("player", "normal")
             if attack_evaded == True:
-                print(f"You evaded {enemy_name.upper().upper()}'s normal attack!\n")
+                print(f"You evaded {enemy_name.upper()}'s normal attack!\n")
                 enemy_charge_attack["charge"] = False
 
             else:

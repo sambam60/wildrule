@@ -328,7 +328,11 @@ def execute_inspect(target_id):
             print(f"CHARGE ATTACK DAMAGE: {enemy["charge_attack"]["damage"]}        CHANCE: {enemy["charge_attack"]["chance"]}%        MISS CHANCE: {enemy["charge_attack"]["miss_multiplier"]}x")
             print(f"COUNTER ATTACK DAMAGE: {enemy["counter_attack"]["damage"]}        CHANCE: {enemy["counter_attack"]["chance"]}%")
             print(f"MAX GOLD DROP: {enemy["gold"]}")
-            print(f"AVAILABLE LOOT: {enemy["loot"]["item"]["name"].title()}        DROP CHANCE: {enemy["loot"]["chance"]}%")
+            loot_item = enemy["loot"]["item"]
+            if loot_item is not None:
+                print(f"AVAILABLE LOOT: {loot_item['name'].title()}        DROP CHANCE: {enemy['loot']['chance']}%")
+            else:
+                print("AVAILABLE LOOT: None")
             print()
             return
         

@@ -60,7 +60,7 @@ def _peak_from_pcm(data: bytes) -> float:
     return float(np.max(np.abs(pcm)) / 32768.0)
 
 
-def listen_for_command(prompt: str = "> ", max_seconds: int = 15, silence_tail_ms: int = 1200) -> str:
+def listen_for_command(prompt: str = "> ", max_seconds: int = 15, silence_tail_ms: int = 2500) -> str:
     if sd is None or KaldiRecognizer is None:
         return ""
     if _model is None:
@@ -76,23 +76,28 @@ def listen_for_command(prompt: str = "> ", max_seconds: int = 15, silence_tail_m
 
     # silence detection based on recent peaks
     history = PeakHistory(capacity=600)
-    silence_threshold = 0.15  # peak under 1.5% considered silence (more sensitive)
+    silence_threshold = 0.05  # peak under 5% considered silence (less aggressive)
     silence_tail = int(silence_tail_ms / 1000 * samplerate)
     bytes_per_sample = 2  # int16
     bytes_tail_needed = silence_tail * bytes_per_sample
     silent_bytes_seen = 0
+    # Only start counting silence after we detect activity or a small grace period
+    activity_detected = False
+    min_listen_ms = 800
+    min_listen_s = min_listen_ms / 1000.0
 
     print("Speak now... (voice input). Press Ctrl+C to cancel.")
 
     tts.set_muted(True)
     start = time.time()
     result_text = ""
+    last_partial_text = ""
 
     ended = False
     timeout_reached = False
 
     def callback(indata, frames, time_info, status):  # noqa: N802
-        nonlocal result_text, silent_bytes_seen, timeout_reached
+        nonlocal result_text, silent_bytes_seen, timeout_reached, activity_detected, last_partial_text
         if ended:
             return
         if status:
@@ -113,15 +118,36 @@ def listen_for_command(prompt: str = "> ", max_seconds: int = 15, silence_tail_m
         sys.stdout.flush()
 
         # feed recognizer
-        if recognizer.AcceptWaveform(data_bytes):
-            # We got a segment, try to read final result in outer loop
-            pass
+        try:
+            accepted = recognizer.AcceptWaveform(data_bytes)
+        except Exception:
+            timeout_reached = True
+            return
+
+        if accepted:
+            if last_partial_text:
+                result_text = last_partial_text
+        else:
+            # track partial text so we can return something even without a final segment
+            try:
+                import json as _json
+                _p = recognizer.PartialResult()
+                _pd = _json.loads(_p)
+                _pt = (_pd.get("partial") or "").strip()
+                if _pt:
+                    result_text = _pt
+                    last_partial_text = _pt
+            except Exception:
+                pass
 
         # silence accumulation
-        if peak < silence_threshold:
-            silent_bytes_seen += len(data_bytes)
-        else:
+        if peak >= silence_threshold:
+            activity_detected = True
             silent_bytes_seen = 0
+        else:
+            # Count silence only after activity or grace period
+            if activity_detected or (time.time() - start) > min_listen_s:
+                silent_bytes_seen += len(data_bytes)
 
     try:
         with sd.RawInputStream(
@@ -144,10 +170,17 @@ def listen_for_command(prompt: str = "> ", max_seconds: int = 15, silence_tail_m
             
             # obtain final result
             ended = True
+            # Collect one more partial snapshot after we've stopped
             try:
-                final_json = recognizer.FinalResult()
+                import json as _json
+                _fp = recognizer.PartialResult()
+                _fpd = _json.loads(_fp)
+                _fpt = (_fpd.get("partial") or "").strip()
+                if _fpt:
+                    result_text = _fpt
+                    last_partial_text = _fpt
             except Exception:
-                final_json = None
+                pass
     except KeyboardInterrupt:
         final_json = None
         timeout_reached = True
@@ -160,17 +193,9 @@ def listen_for_command(prompt: str = "> ", max_seconds: int = 15, silence_tail_m
         sys.stdout.flush()
 
     # parse final result
-    if not final_json:
-        if timeout_reached:
-            print("Voice input timed out.")
-        return ""
-    try:
-        import json
+    if timeout_reached:
+        print("Voice input timed out.")
 
-        data = json.loads(final_json)
-        text = (data.get("text") or "").strip()
-        return text
-    except Exception:
-        return ""
+    return (last_partial_text or result_text or "")
 
 

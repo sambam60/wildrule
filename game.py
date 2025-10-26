@@ -13,9 +13,14 @@ import tts
 import voice_input
 from minimap import draw_minimap
 
+# ANSI colour constants
+PASTEL_GREEN = "\033[38;2;144;238;144m"
+RED = "\033[38;2;255;0;0m"
+RESET = "\033[0m"
 
 
-# When True, narrative printing should avoid slow typewriter and just speak/print
+
+# when True, narrative printing should avoid slow typewriter and just speak/print
 TTS_ENABLED = False
 
  
@@ -98,8 +103,6 @@ def print_slowly(text, delay=0.03):
     print()  # Add newline at the end
 
 def banner():
-    pastel_green = "\033[38;2;144;238;144m"
-    reset = "\033[0m"
     ascii_art = """         _________ _        ______   _______           _        _______ 
 |\\     /|\\__   __/( \\      (  __  \\ (  ____ )|\\     /|( \\      (  ____ \\
 | )   ( |   ) (   | (      | (  \\  )| (    )|| )   ( || (      | (    \\/
@@ -110,7 +113,7 @@ def banner():
 (_______)\\_______/(_______/(______/ |/   \\__/(_______)(_______/(_______/
                                                                         """
     for line in ascii_art.splitlines():
-        print(f"{pastel_green}{line}{reset}")
+        print(f"{PASTEL_GREEN}{line}{RESET}")
         time.sleep(0.2)
     
 
@@ -150,93 +153,13 @@ def print_room(room): # Displays details of the current room when room changes o
 
 
 def say_text(text: str):
-    """Print text; if TTS is enabled, print immediately and speak; else print slowly."""
+    """print text if tts on or type slow"""
     if TTS_ENABLED:
         print(text)
         tts.speak(text)
     else:
         print_slowly(text)
 
-def _box_lines(label, is_current, width=9):
-    """Build a 3-line box for a single cell using box-drawing characters.
-
-    width is the inner text width (not counting borders). The label shows as '⌖'
-    when the cell is the player's current location.
-    """
-    # ANSI colours
-    LIGHT_BLUE = "\033[38;2;173;216;230m"
-    RESET_COLOUR = "\033[0m"
-
-    text = "⌖" if is_current else label
-    inner = f"{text:^{width}}"
-    if is_current:
-        inner = inner.replace("⌖", f"{LIGHT_BLUE}⌖{RESET_COLOUR}", 1)
-    top = f"┌{'─'*width}┐"
-    mid = f"│{inner}│"
-    bot = f"└{'─'*width}┘"
-    return top, mid, bot
-
-def print_forest_minimap():
-    """this prints a box-drawn minimap of the Forest
-
-    Grid (labels are compass points; current cell shows as 'YOU'):
-        START
-      ┌───────┬───────┬───────┐
-      │  NW   │   N   │  NE   │
-      ├───────┼───────┼───────┤
-      │  SW   │   S   │  SE   │
-      └───────┴───────┴───────┘
-    """
-    current_id = player.current_room.get("id", "")
-
-    width = 9  # inner width of each cell
-
-    # Build START box (single cell) and compute padding to center it above the grid
-    s_top, s_mid, s_bot = _box_lines("START", current_id == "start", width)
-    grid_total_width = 3*width + 4  # three cells plus four border/joint chars
-    start_box_width = width + 2
-    left_pad = (grid_total_width - start_box_width) // 2
-    pad = " " * left_pad
-
-    # Determine which forest cell is current
-    is_nw = (current_id == "forest_nw")
-    is_n = (current_id == "forest_n")
-    is_ne = (current_id == "forest_ne")
-    is_sw = (current_id == "forest_sw")
-    is_s = (current_id == "forest_s")
-    is_se = (current_id == "forest_se")
-
-    # Heading
-    print("\n Map")
-    print(pad + s_top)
-    print(pad + s_mid)
-    print(pad + s_bot)
-
-    # Top border for 3 columns
-    top_border = "┌" + "┬".join(["─"*width]*3) + "┐"
-    sep_border = "├" + "┼".join(["─"*width]*3) + "┤"
-    bot_border = "└" + "┴".join(["─"*width]*3) + "┘"
-
-    # Content lines for two rows (NW N NE) and (SW S SE)
-    def content_line(labels, currents):
-        LIGHT_BLUE = "\033[38;2;173;216;230m"
-        RESET_COLOUR = "\033[0m"
-        cells = []
-        for label, is_here in zip(labels, currents):
-            text = "⌖" if is_here else label
-            inner = f"{text:^{width}}"
-            if is_here:
-                inner = inner.replace("⌖", f"{LIGHT_BLUE}⌖{RESET_COLOUR}", 1)
-            cells.append(inner)
-        return "│" + "│".join(cells) + "│"
-
-    print(top_border)
-    print(content_line(["NW", "N", "NE"], [is_nw, is_n, is_ne]))
-    print(sep_border)
-    print(content_line(["SW", "S", "SE"], [is_sw, is_s, is_se]))
-    print(bot_border + "\n")
-
- 
 def menu(exits, room_items, inv_items):
 
     user_input = input("> ")
@@ -246,7 +169,7 @@ def menu(exits, room_items, inv_items):
 
 def main():
 
-    # Feature toggles (ask before game starts)
+    # ask user for tts and voice input
     try:
         use_tts = input("Enable Text-To-Speech (y/n)? ").strip().lower().startswith("y")
     except Exception:
@@ -256,7 +179,7 @@ def main():
     except Exception:
         use_voice = False
 
-    # Initialise subsystems based on toggles
+    # setup subsystems based on user choice
     tts_enabled = False
     if use_tts:
         tts_enabled = tts.init_tts()
@@ -272,17 +195,17 @@ def main():
             print(prompt, end="", flush=True)
             heard = voice_input.listen_for_command(prompt)
             if heard:
-                print(f"\n> {heard}")
+                print(f"\n{PASTEL_GREEN}> {RESET}{heard}")
                 return heard
             else:
-                # Voice input failed or timed out, fall back to text input
-                print("\nVoice input failed. Switching to text input...")
+                # voice failed, use text instead
+                print("\nVoice input failed. switching to text...")
                 return input(prompt)
         return input(prompt)
 
     banner()
     
-    # Opening narration
+    # intro text
     print("\n" + "="*100)
     opening_lines = [
         "Welcome to the World of Wildrule!",
@@ -308,7 +231,7 @@ def main():
         "cities (Vengeful Village, Icy Igloos, and Little Kingdom), along with the Hidden Dungeon you",
         "must find. Where you go from the start is up to you.",
     ]
-    # Print and speak opening: if TTS enabled, speak in one run to avoid choppiness
+    # print intro if tts on, speak all at once
     for line in opening_lines:
         if line == "":
             print()
@@ -332,30 +255,30 @@ def main():
         if player.stats.get("health", 0) <= 0:
             print("\n————————————————————————————————————————————————————————————————————————————————————————————————————")
             if player.current_room.get("enemies") and len(player.current_room["enemies"]) > 0:
-                print(f"GAME OVER: YOU HAVE BEEN KILLED BY THE {player.current_room['enemies'][0]['name'].upper()}")
+                print(f"{RED}GAME OVER: YOU HAVE BEEN KILLED BY THE {player.current_room['enemies'][0]['name'].upper()}{RESET}")
             else:
-                print("GAME OVER: YOU HAVE DIED.")
+                print(f"{RED}GAME OVER: YOU HAVE DIED.{RESET}")
             print("————————————————————————————————————————————————————————————————————————————————————————————————————\n")
             exit()
 
-        # show minimap and health before prompting for input
+        # show map and hp before asking for input
         draw_minimap(player.current_room)
         player.print_health()
         print("What do you want to do?")
         # Use voice input if enabled; fallback handled inside
         def _menu(_exits, _room_items, _inv_items):
-            user_input = get_player_input("> ")
+            user_input = get_player_input(f"{PASTEL_GREEN}> {RESET}")
             normalised_user_input = normalise_input(user_input)
             return normalised_user_input
         command = _menu(player.current_room["exits"], player.current_room["items"], player.inventory)
         execute_command(command)
-        # GAME OVER check immediately after action
+        # check if player died after action
         if player.stats.get("health", 0) <= 0:
             print("\n————————————————————————————————————————————————————————————————————————————————————————————————————")
             if player.current_room.get("enemies") and len(player.current_room["enemies"]) > 0:
-                print(f"GAME OVER: YOU HAVE BEEN KILLED BY THE {player.current_room['enemies'][0]['name'].upper()}")
+                print(f"{RED}GAME OVER: YOU HAVE BEEN KILLED BY THE {player.current_room['enemies'][0]['name'].upper()}{RESET}")
             else:
-                print("GAME OVER: YOU HAVE DIED.")
+                print(f"{RED}GAME OVER: YOU HAVE DIED.{RESET}")
             print("————————————————————————————————————————————————————————————————————————————————————————————————————\n")
             exit()
 

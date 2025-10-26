@@ -18,6 +18,10 @@ stats = {
     "evasion": 0,
 }
 
+gold = 0
+charge_attack = False
+evade_attack = False
+
 room_change = True
 
 
@@ -29,10 +33,14 @@ def print_health():
     if health > 100:
         health = 100
 
-    full_hearts = health // 10
+    full_hearts = int(health) // 10
     empty_hearts = 10 - full_hearts
 
-    heart_full = "\u2665"  # ♥
+    # Colours
+    LIGHT_RED = "\033[38;2;255;102;102m"
+    RESET = "\033[0m"
+
+    heart_full = f"{LIGHT_RED}\u2665{RESET}"  # coloured ♥
     heart_empty = "\u2661"  # ♡
 
     # Join with a single space between each heart
