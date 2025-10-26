@@ -328,6 +328,16 @@ def main():
             print("\n————————————————————————————————————————————————————————————————————————————————————————————————————\n")
             print_room(player.current_room)
             player.room_change = False
+        # GAME OVER check before prompting
+        if player.stats.get("health", 0) <= 0:
+            print("\n————————————————————————————————————————————————————————————————————————————————————————————————————")
+            if player.current_room.get("enemies") and len(player.current_room["enemies"]) > 0:
+                print(f"GAME OVER: YOU HAVE BEEN KILLED BY THE {player.current_room['enemies'][0]['name'].upper()}")
+            else:
+                print("GAME OVER: YOU HAVE DIED.")
+            print("————————————————————————————————————————————————————————————————————————————————————————————————————\n")
+            exit()
+
         # show minimap and health before prompting for input
         draw_minimap(player.current_room)
         player.print_health()
@@ -339,6 +349,15 @@ def main():
             return normalised_user_input
         command = _menu(player.current_room["exits"], player.current_room["items"], player.inventory)
         execute_command(command)
+        # GAME OVER check immediately after action
+        if player.stats.get("health", 0) <= 0:
+            print("\n————————————————————————————————————————————————————————————————————————————————————————————————————")
+            if player.current_room.get("enemies") and len(player.current_room["enemies"]) > 0:
+                print(f"GAME OVER: YOU HAVE BEEN KILLED BY THE {player.current_room['enemies'][0]['name'].upper()}")
+            else:
+                print("GAME OVER: YOU HAVE DIED.")
+            print("————————————————————————————————————————————————————————————————————————————————————————————————————\n")
+            exit()
 
 
 if __name__ == "__main__":
