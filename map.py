@@ -386,8 +386,8 @@ You can go EAST to the southeastern plains, WEST to the southwestern plains, NOR
         "west": "Plains_SW",
     },
 
-    "items": [],
-    "interacts": [],
+    "items": [item_city_key_1, item_city_key_2],
+    "interacts": [npc_guard],
     "enemies": [],
 }
 
@@ -491,8 +491,8 @@ You can go NORTH back to the city's northern side.""",
         "north": "Kingdom_N",
     },
 
-    "items": [],
-    "interacts": [],
+    "items": [item_forest_trophy, item_plains_trophy, item_tundra_trophy],
+    "interacts": [npc_dungeonkeeper],
     "enemies": [],
 }
 

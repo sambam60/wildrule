@@ -85,9 +85,23 @@ This accessory will add +10 to your defence stat.""",
     "buff_desc": "Player defence stat is increased by 10.",
 }
 
+item_city_key_1 = {
+    "id": "key1",
+    "name": "Gate Key Part 1",
+    "type": "item",
+    "description": """A part from a broken key. Seems like this used to be the bow of the key.""",
+}
+
+item_city_key_2 = {
+    "id": "key2",
+    "name": "Gate Key Part 2",
+    "type": "item",
+    "description": """A part from a broken key. Seems like this used to be the blade of the key.""",
+}
+
 item_forest_trophy = {
     "id": "foresttrophy",
-    "name": "Tundra Trophy",
+    "name": "Forest Trophy",
     "type": "item",
     "description": """A shining trophy, decorated with a wreath of tree back and moss.
 This item is only obtainable by killing the rare and elusive Forest Giant.""",
@@ -105,7 +119,7 @@ item_plains_trophy = {
     "id": "plainstrophy",
     "name": "Plains Trophy",
     "type": "item",
-    "description": """A shining trophy, decorated with a wreath of tree back and moss.
+    "description": """A shining trophy, decorated with a wreath of wheat and sunflowers.
 This item is only obtainable by killing the rare and elusive Plains Python.""",
 }
 
