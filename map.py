@@ -11,9 +11,9 @@ from enemies import *
 room_starter = {
     "id": "start",
 
-    "name": "starting room",
+    "name": "Starting Room",
 
-    "area": "test",
+    "area": "Forest",
     "explored": False,
 
     "description":

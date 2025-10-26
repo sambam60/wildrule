@@ -41,10 +41,33 @@ We need to make a name
 Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
 
 ## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+Requirements (offline TTS/ASR):
+
+1. Python packages (install in your environment):
+```
+pip install pyttsx3 vosk sounddevice numpy
+```
+
+2. Vosk offline model (no internet needed at runtime):
+   - Download `vosk-model-small-en-us-0.15` from `https://alphacephei.com/vosk/models`
+   - Extract to `assets/models/vosk/vosk-model-small-en-us-0.15`
+   - Create folders if they don't exist.
+
+Notes:
+- On macOS, you may need to grant microphone permissions or install PortAudio (`brew install portaudio`).
+- If TTS fails to initialise, the game will continue without speaking.
 
 ## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+Run the game:
+```
+python game.py
+```
+
+At startup you will be asked:
+- "Enable Text-To-Speech (y/n)?"
+- "Enable Voice Input (y/n)?"
+
+If voice input is enabled, when prompted for a command the terminal shows a live ASCII sparkline of microphone peaks while listening. Speak your command; recognition stops on silence or timeout and the text is echoed. If recognition fails or times out, the game falls back to keyboard input.
 
 ## Contributing
 State if you are open to contributions and what your requirements are for accepting them.
@@ -61,3 +84,8 @@ MIT License
 
 ## Project status
 In development until Tuesday the 28th of October
+
+## Troubleshooting
+- No speech output: ensure `pyttsx3` installed and system audio output works. Some environments require `espeak`/`nsss` backends.
+- Mic not working: install PortAudio and allow microphone permissions. Verify with `python -c "import sounddevice as sd; print(sd.query_devices())"`.
+- Model not found: check the Vosk model path `assets/models/vosk/vosk-model-small-en-us-0.15` exists.

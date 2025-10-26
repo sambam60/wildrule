@@ -9,7 +9,7 @@ import player
 from items import *
 from interactions import *
 from combat import *
-from minimap import *
+from minimap import draw_minimap
 
 def turn_change(function, *args): # CONTROLS FUNCTIONS THAT WILL RUN WHEN A TURN CHANGE COMMAND IS SUCCESSFULLY RUN
 
@@ -126,7 +126,7 @@ def execute_command(command): # Command list
             exit()
 
         case "test":
-            print(draw_minimap(player.current_room))
+            draw_minimap(player.current_room)
 
         case _:
             print(f"\nERROR: '{command[0]}' is not a valid command. Please enter 'help' for a list of valid commands.\n")
@@ -303,7 +303,7 @@ def execute_help(exits, room_items, inv_items): # Prints all valid commands that
 
 def execute_map():
     print("\n — World Map — \n")
-    print(draw_minimap(player.current_room))
+    draw_minimap(player.current_room)
     print("\n — Key — \n")
     print(f"[X] = Your current position -> {player.current_room["name"].upper()}")
     print("[?] = Unexplored area")

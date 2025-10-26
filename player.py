@@ -1,14 +1,11 @@
 from map import rooms
 from items import *
 
-# WHEN USING THESE VARIABLES IN OTHER FILES, PLEASE USE player.<variable>
-
 current_room = rooms["Starter"]
 current_turn = 0
 change_turn = False
 
-inventory = []
-gold = 300
+inventory = [item_test1]
 
 equipment = {
     "weapon": weapon_default,
@@ -18,8 +15,27 @@ equipment = {
 
 stats = {
     "health": 100,
-    "evasion": 10,
+    "evasion": 0,
 }
 
-charge_attack = False
-evade_attack = False
+room_change = True
+
+
+def print_health():
+    """Print the player's health as hearts: 10 hearts, each worth 10 HP, with gaps of one space between hearts."""
+    health = stats.get("health", 0)
+    if health < 0:
+        health = 0
+    if health > 100:
+        health = 100
+
+    full_hearts = health // 10
+    empty_hearts = 10 - full_hearts
+
+    heart_full = "\u2665"  # ♥
+    heart_empty = "\u2661"  # ♡
+
+    # Join with a single space between each heart
+    hearts = ([heart_full] * full_hearts) + ([heart_empty] * empty_hearts)
+    hearts_str = " ".join(hearts)
+    print(f"HP: {hearts_str}")
