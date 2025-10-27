@@ -1,3 +1,8 @@
+"""
+This file stores functions for normalising player input.
+Shouldn't be edited during development (unless something drastic needs changing)
+"""
+
 import string
 
 # List of "unimportant" words (feel free to add more)
@@ -13,41 +18,17 @@ skip_words = ['a', 'about', 'all', 'an', 'another', 'any', 'around', 'at',
 
 
 def filter_words(words, skip_words):
-    """This function takes a list of words and returns a copy of the list from
-    which all words provided in the list skip_words have been removed.
-    For example:
-
-    >>> filter_words(["help", "me", "please"], ["me", "please"])
-    ['help']
-
-    >>> filter_words(["go", "south"], skip_words)
-    ['go', 'south']
-
-    >>> filter_words(['how', 'about', 'i', 'go', 'through', 'that', 'little', 'passage', 'to', 'the', 'south'], skip_words)
-    ['go', 'passage', 'south']
-
-    """
-    filtered_words = []
+    
+    filtered_list = []
     for word in words:
-        if word not in skip_words:
-            filtered_words.append(word)
-
-    return filtered_words
+        if not (word in skip_words):
+            filtered_list.append(word)
+            
+    return filtered_list
 
     
 def remove_punct(text):
-    """This function is used to remove all punctuation
-    marks from a string. Spaces do not count as punctuation and should
-    not be removed. The function takes a string and returns a new string
-    which does not contain any punctuation. For example:
 
-    >>> remove_punct("Hello, World!")
-    'Hello World'
-    >>> remove_punct("-- ...Hey! -- Yes?!...")
-    ' Hey  Yes'
-    >>> remove_punct(",go!So.?uTh")
-    'goSouTh'
-    """
     no_punct = ""
     for char in text:
         if not (char in string.punctuation):
@@ -57,32 +38,10 @@ def remove_punct(text):
 
 
 def normalise_input(user_input):
-    """This function removes all punctuation from the string and converts it to
-    lower case. It then splits the string into a list of words (also removing
-    any extra spaces between words) and further removes all "unimportant"
-    words from the list of words using the filter_words() function. The
-    resulting list of "important" words is returned. For example:
 
-    >>> normalise_input("  Go   south! ")
-    ['go', 'south']
-    >>> normalise_input("!!!  tAkE,.    LAmp!?! ")
-    ['take', 'lamp']
-    >>> normalise_input("HELP!!!!!!!")
-    ['help']
-    >>> normalise_input("Now, drop the sword please.")
-    ['drop', 'sword']
-    >>> normalise_input("Kill ~ tHe :-  gObLiN,. wiTH my SWORD!!!")
-    ['kill', 'goblin', 'sword']
-    >>> normalise_input("I would like to drop my laptop here.")
-    ['drop', 'laptop']
-    >>> normalise_input("I wish to take this large gem now!")
-    ['take', 'gem']
-    >>> normalise_input("How about I go through that little passage to the south...")
-    ['go', 'passage', 'south']
+    no_punct = remove_punct(user_input).lower()
+    stripped = no_punct.strip()
+    split_list = stripped.split()
+    normalised_input = filter_words(split_list, skip_words)
 
-    """
-    # Remove punctuation and convert to lower case
-    user_input = remove_punct(user_input).lower()
-    user_input_stripped_list = user_input.split()
-    filtered_words = filter_words(user_input_stripped_list, skip_words)
-    return filtered_words
+    return normalised_input

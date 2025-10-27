@@ -1,371 +1,233 @@
-#!/usr/bin/python3
-
 from map import rooms
-from player import *
+import player
 from items import *
+from interactions import *
+from commands import *
 from gameparser import *
+import time
+import sys
+import threading
+import queue
+import textwrap
+import tts
+import voice_input
+from minimap import draw_minimap
+from combat import timed_enemy_attack, _print_combat_guide_once
+import threading
+
+# ANSI colour constants
+PASTEL_GREEN = "\033[38;2;144;238;144m"
+RED = "\033[38;2;255;0;0m"
+RESET = "\033[0m"
 
 
 
 def list_of_items(items):
-    """This function takes a list of items (see items.py for the definition) and
-    returns a comma-separated list of item names (as a string). For example:
 
-    >>> list_of_items([item_pen, item_handbook])
-    'a pen, a student handbook'
-
-    >>> list_of_items([item_id])
-    'id card'
-
-    >>> list_of_items([])
-    ''
-
-    >>> list_of_items([item_money, item_handbook, item_laptop])
-    'money, a student handbook, laptop'
-
-    """
-    printed_items = []
+    item_list = []
     for item in items:
-        printed_items.append(item["name"])
+        item_list.append(item["name"])
+    item_name_list = ", ".join(item_list)
 
-    return ', '.join(printed_items)
-
-
-def print_room_items(room):
-    """This function takes a room as an input and nicely displays a list of items
-    found in this room (followed by a blank line). If there are no items in
-    the room, nothing is printed. See map.py for the definition of a room, and
-    items.py for the definition of an item. This function uses list_of_items()
-    to produce a comma-separated list of item names. For example:
-
-    >>> print_room_items(rooms["Reception"])
-    There is a pack of biscuits, a student handbook here.
-    <BLANKLINE>
-
-    >>> print_room_items(rooms["Office"])
-    There is a pen here.
-    <BLANKLINE>
-
-    >>> print_room_items(rooms["Admins"])
-
-    (no output)
-
-    Note: <BLANKLINE> here means that doctest should expect a blank line.
-
-    """
-    if room["items"]:
-        print("There is " + list_of_items(room["items"]) + " here.")
-        print()
+    return item_name_list
 
 
-def print_inventory_items(items):
-    """This function takes a list of inventory items and displays it nicely, in a
-    manner similar to print_room_items(). The only difference is in formatting:
-    print "You have ..." instead of "There is ... here.". For example:
 
-    >>> print_inventory_items(inventory)
-    You have id card, laptop, money.
-    <BLANKLINE>
-
-    """
-    if items:
-        print("You have " + list_of_items(items) + ".")
-        print()
-
-
-def print_room(room):
-    """This function takes a room as an input and nicely displays its name
-    and description. The room argument is a dictionary with entries "name",
-    "description" etc. (see map.py for the definition). The name of the room
-    is printed in all capitals and framed by blank lines. Then follows the
-    description of the room and a blank line again. If there are any items
-    in the room, the list of items is printed next followed by a blank line
-    (use print_room_items() for this). For example:
-
-    >>> print_room(rooms["Office"])
-    <BLANKLINE>
-    THE GENERAL OFFICE
-    <BLANKLINE>
-    You are standing next to the cashier's till at
-    30-36 Newport Road. The cashier looks at you with hope
-    in their eyes. If you go west you can return to the
-    Queen's Buildings.
-    <BLANKLINE>
-    There is a pen here.
-    <BLANKLINE>
-
-    >>> print_room(rooms["Reception"])
-    <BLANKLINE>
-    RECEPTION
-    <BLANKLINE>
-    You are in a maze of twisty little passages, all alike.
-    Next to you is the School of Computer Science and
-    Informatics reception. The receptionist, Matt Strangis,
-    seems to be playing an old school text-based adventure
-    game on his computer. There are corridors leading to the
-    south and east. The exit is to the west.
-    <BLANKLINE>
-    There is a pack of biscuits, a student handbook here.
-    <BLANKLINE>
-
-    >>> print_room(rooms["Admins"])
-    <BLANKLINE>
-    MJ AND SIMON'S ROOM
-    <BLANKLINE>
-    You are leaning agains the door of the systems managers'
-    room. Inside you notice Matt "MJ" John and Simon Jones. They
-    ignore you. To the north is the reception.
-    <BLANKLINE>
-
-    Note: <BLANKLINE> here means that doctest should expect a blank line.
-    """
-    # Display room name
-    print()
-    print(room["name"].upper())
-    print()
-    # Display room description
-    print(room["description"])
-    print()
-    # Display room items
-    print_room_items(room)
-
-    #
-    # COMPLETE ME!
-    #
-
-def exit_leads_to(exits, direction):
-    """This function takes a dictionary of exits and a direction (a particular
-    exit taken from this dictionary). It returns the name of the room into which
-    this exit leads. For example:
-
-    >>> exit_leads_to(rooms["Reception"]["exits"], "south")
-    "MJ and Simon's room"
-    >>> exit_leads_to(rooms["Reception"]["exits"], "east")
-    "your personal tutor's office"
-    >>> exit_leads_to(rooms["Tutor"]["exits"], "west")
-    'Reception'
-    """
-    return rooms[exits[direction]]["name"]
-
-
-def print_exit(direction, leads_to):
-    """This function prints a line of a menu of exits. It takes a direction (the
-    name of an exit) and the name of the room into which it leads (leads_to),
-    and should print a menu line in the following format:
-
-    GO <EXIT NAME UPPERCASE> to <where it leads>.
-
-    For example:
-    >>> print_exit("east", "you personal tutor's office")
-    GO EAST to you personal tutor's office.
-    >>> print_exit("south", "MJ and Simon's room")
-    GO SOUTH to MJ and Simon's room.
-    """
-    print("GO " + direction.upper() + " to " + leads_to + ".")
-
-
-def print_menu(exits, room_items, inv_items):
-    """This function displays the menu of available actions to the player. The
-    argument exits is a dictionary of exits as exemplified in map.py. The
-    arguments room_items and inv_items are the items lying around in the room
-    and carried by the player respectively. The menu should, for each exit,
-    call the function print_exit() to print the information about each exit in
-    the appropriate format. The room into which an exit leads is obtained
-    using the function exit_leads_to(). Then, it should print a list of commands
-    related to items: for each item in the room print
-
-    "TAKE <ITEM ID> to take <item name>."
-
-    and for each item in the inventory print
-
-    "DROP <ITEM ID> to drop <item name>."
-
-    For example, the menu of actions available at the Reception may look like this:
-
-    You can:
-    GO EAST to your personal tutor's office.
-    GO WEST to the parking lot.
-    GO SOUTH to MJ and Simon's room.
-    TAKE BISCUITS to take a pack of biscuits.
-    TAKE HANDBOOK to take a student handbook.
-    DROP ID to drop your id card.
-    DROP LAPTOP to drop your laptop.
-    DROP MONEY to drop your money.
-    What do you want to do?
-
-    """
-    print("You can:")
-    # Iterate over available exits
-    for direction in exits:
-        # Print the exit name and where it leads to
-        print_exit(direction, exit_leads_to(exits, direction))
-
-    # Print TAKE commands for room items
-    for item in room_items:
-        print("TAKE " + item["id"].upper() + " to take " + item["name"] + ".")
+def banner():
+    ascii_art = """         _________ _        ______   _______           _        _______ 
+|\\     /|\\__   __/( \\      (  __  \\ (  ____ )|\\     /|( \\      (  ____ \\
+| )   ( |   ) (   | (      | (  \\  )| (    )|| )   ( || (      | (    \\/
+| | _ | |   | |   | |      | |   ) || (____)|| |   | || |      | (__    
+| |( )| |   | |   | |      | |   | ||     __)| |   | || |      |  __)   
+| || || |   | |   | |      | |   ) || (\\ (   | |   | || |      | (      
+| () () |___) (___| (____/\\| (__/  )| ) \\ \\__| (___) || (____/\\| (____/\\
+(_______)\\_______/(_______/(______/ |/   \\__/(_______)(_______/(_______/
+                                                                        """
+    for line in ascii_art.splitlines():
+        print(f"{PASTEL_GREEN}{line}{RESET}")
+        time.sleep(0.2)
     
-    # Print DROP commands for inventory items
-    for item in inv_items:
-        print("DROP " + item["id"].upper() + " to drop " + item["name"] + ".")
-    
-    print("What do you want to do?")
-
-
-def is_valid_exit(exits, chosen_exit):
-    """This function checks, given a dictionary "exits" (see map.py) and
-    a players's choice "chosen_exit" whether the player has chosen a valid exit.
-    It returns True if the exit is valid, and False otherwise. Assume that
-    the name of the exit has been normalised by the function normalise_input().
-    For example:
-
-    >>> is_valid_exit(rooms["Reception"]["exits"], "south")
-    True
-    >>> is_valid_exit(rooms["Reception"]["exits"], "up")
-    False
-    >>> is_valid_exit(rooms["Parking"]["exits"], "west")
-    False
-    >>> is_valid_exit(rooms["Parking"]["exits"], "east")
-    True
-    """
-    return chosen_exit in exits
-
-
-def execute_go(direction):
-    """This function, given the direction (e.g. "south") updates the current room
-    to reflect the movement of the player if the direction is a valid exit
-    (and prints the name of the room into which the player is
-    moving). Otherwise, it prints "You cannot go there."
-    """
-    global current_room
-    if is_valid_exit(current_room["exits"], direction):
-        current_room = move(current_room["exits"], direction)
-        print("You go " + direction + ".")
-    else:
-        print("You cannot go there.")
-
-
-def execute_take(item_id):
-    """This function takes an item_id as an argument and moves this item from the
-    list of items in the current room to the player's inventory. However, if
-    there is no such item in the room, this function prints
-    "You cannot take that."
-    """
-    global inventory
-    for item in current_room["items"]:
-        if item["id"] == item_id:
-            current_room["items"].remove(item)
-            inventory.append(item)
-            print("You take " + item["name"] + ".")
-            return
-    print("You cannot take that.")
-    
-
-def execute_drop(item_id):
-    """This function takes an item_id as an argument and moves this item from the
-    player's inventory to list of items in the current room. However, if there is
-    no such item in the inventory, this function prints "You cannot drop that."
-    """
-    global inventory
-    for item in inventory:
-        if item["id"] == item_id:
-            inventory.remove(item)
-            current_room["items"].append(item)
-            print("You drop " + item["name"] + ".")
-            return
-    print("You cannot drop that.")
-    
-
-def execute_command(command):
-    """This function takes a command (a list of words as returned by
-    normalise_input) and, depending on the type of action (the first word of
-    the command: "go", "take", or "drop"), executes either execute_go,
-    execute_take, or execute_drop, supplying the second word as the argument.
-
-    """
-
-    if 0 == len(command):
-        return
-
-    if command[0] == "go":
-        if len(command) > 1:
-            execute_go(command[1])
-        else:
-            print("Go where?")
-
-    elif command[0] == "take":
-        if len(command) > 1:
-            execute_take(command[1])
-        else:
-            print("Take what?")
-
-    elif command[0] == "drop":
-        if len(command) > 1:
-            execute_drop(command[1])
-        else:
-            print("Drop what?")
-
-    else:
-        print("This makes no sense.")
 
 
 def menu(exits, room_items, inv_items):
-    """This function, given a dictionary of possible exits from a room, and a list
-    of items found in the room and carried by the player, prints the menu of
-    actions using print_menu() function. It then prompts the player to type an
-    action. The players's input is normalised using the normalise_input()
-    function before being returned.
 
-    """
-
-    # Display menu
-    print_menu(exits, room_items, inv_items)
-
-    # Read player's input
     user_input = input("> ")
-
-    # Normalise the input
     normalised_user_input = normalise_input(user_input)
 
     return normalised_user_input
 
-
-def move(exits, direction):
-    """This function returns the room into which the player will move if, from a
-    dictionary "exits" of avaiable exits, they choose to move towards the exit
-    with the name given by "direction". For example:
-
-    >>> move(rooms["Reception"]["exits"], "south") == rooms["Admins"]
-    True
-    >>> move(rooms["Reception"]["exits"], "east") == rooms["Tutor"]
-    True
-    >>> move(rooms["Reception"]["exits"], "west") == rooms["Office"]
-    False
-    """
-
-    # Next room to go to
-    return rooms[exits[direction]]
-
-
-# This is the entry point of our program
 def main():
 
-    # Main game loop
+    # ask user for tts and voice input
+    try:
+        use_tts = input("Enable Text-To-Speech (y/n)? ").strip().lower().startswith("y")
+    except Exception:
+        use_tts = False
+    try:
+        use_voice = input("Enable Voice Input (y/n)? ").strip().lower().startswith("y")
+    except Exception:
+        use_voice = False
+
+    # setup subsystems based on user choice
+    tts_enabled = False
+    if use_tts:
+        tts_enabled = tts.init_tts()
+    voice_enabled = False
+    if use_voice:
+        voice_enabled = voice_input.init_model()
+
+    global TTS_ENABLED
+    TTS_ENABLED = bool(tts_enabled)
+
+    # ask user for time-based combat only if voice input and TTS are disabled
+    enable_tbc = False
+    if not voice_enabled and not tts_enabled:
+        try:
+            enable_tbc = input("Enable Time-Based Combat (y/n)? ").strip().lower().startswith("y")
+        except Exception:
+            enable_tbc = False
+    else:
+        print("Time-Based Combat is disabled when Voice Input or TTS is enabled.")
+    
+    try:
+        import player as _player_cfg
+        _player_cfg.time_based_combat = bool(enable_tbc)
+    except Exception:
+        pass
+
+    def get_player_input(prompt: str) -> str:
+        if voice_enabled:
+            print(prompt, end="", flush=True)
+            heard = voice_input.listen_for_command(prompt)
+            if heard:
+                print(f"\n{PASTEL_GREEN}> {RESET}{heard}")
+                return heard
+            else:
+                # voice failed, use text instead
+                print("\nVoice input failed. switching to text...")
+                return input(prompt)
+        return input(prompt)
+
+    banner()
+    
+    # intro text
+    print("\n" + "="*100)
+    opening_lines = [
+        "Welcome to the World of Wildrule!",
+        "You are a brave adventurer who has taken up the treacherous task of retrieving the Temple's Sword,",
+        "a powerful weapon meant to be protected by Temple Guards. However, they were no match for the",
+        "Skeleton King, who defeated them easily and stole the sword to his hidden dungeon. Now Wildrule",
+        "stands defenseless against the Skeleton King and his army.",
+        "",
+        "The thieves left only one trace: a map leading to a secret location within the Little Kingdom.",
+        "Here you will find the Hidden Dungeon that has claimed the lives of all who have attempted to",
+        "retrieve the Temple Sword. You are risking your life to recover the sword and return it to its",
+        "rightful place in the Temple.",
+        "",
+        "It is your choice how you proceed with your adventure. However, it is suggested that you take",
+        "advantage of every bit of advice and tools you can find around the map. After all, this will",
+        "NOT be an easy adventure.",
+        "",
+        "You start with only a stick. Along your way, you will need to collect more items to defeat",
+        "stronger enemies. Make sure to take advantage of the merchants scattered throughout the map.",
+        "",
+        "To help you on your journey, you will find a map showing the different areas of the world and",
+        "how you can travel through them. There are three biomes (Forest, Plains, and Tundra) and three",
+        "cities (Vengeful Village, Icy Igloos, and Little Kingdom), along with the Hidden Dungeon you",
+        "must find. Where you go from the start is up to you.",
+    ]
+    # print intro if tts on, speak all at once
+    for line in opening_lines:
+        if line == "":
+            print()
+        else:
+            say_text(line)
+    if TTS_ENABLED:
+        try:
+            tts.speak_many([l for l in opening_lines if l])
+        except Exception:
+            pass
+    print("="*100 + "\n")
+
     while True:
-        # Display game status (room description, inventory etc.)
-        print_room(current_room)
-        print_inventory_items(inventory)
 
-        # Show the menu with possible actions and ask the player
-        command = menu(current_room["exits"], current_room["items"], inventory)
+        if player.current_turn == 0:
 
-        # Execute the player's command
-        execute_command(command)
+            print("\n————————————————————————————————————————————————————————————————————————————————————————————————————\n")
+            print_room(player.current_room)
+            player.current_turn = 1
+            player.room_change = False
+
+        if player.menu_state == False:
+
+            player.print_health()
+            print(f"TURN: {player.current_turn}")
+            print("\nWhat do you want to do?")
+            # Use voice input if enabled; fallback handled inside
+            def _menu(_exits, _room_items, _inv_items):
+                user_input = get_player_input(f"{PASTEL_GREEN}> {RESET}")
+                normalised_user_input = normalise_input(user_input)
+                return normalised_user_input
+            # Precombat prompt with concurrent bar (non-intrusive to typing)
+            if getattr(player, "time_based_combat", False) and getattr(player, "pending_precombat", None) and not getattr(player, "locked_in_combat", False):
+                print("\nA foe eyes you. Enter combat or escape!")
+                print("Type an action now to ESCAPE (e.g., 'go south'), or type 'attack ' + enemy to ENTER with a bonus!")
+                # allocate a line for the bar above the prompt
+                print()  # empty line reserved for the bar
+                stop_event = threading.Event()
+                def _animate_precombat(total: int = 18, interval: float = 0.25):
+                    import sys as _sys
+                    import time as _time
+                    RED = "\033[38;2;255;0;0m"
+                    RESET = "\033[0m"
+                    t = total
+                    while t > 0 and not stop_event.is_set():
+                        # Save cursor, move up 1 line, draw, restore
+                        _sys.stdout.write("\033[s\033[1A\r")
+                        _sys.stdout.write(f"Pre-Combat: {RED}{'|'*t}{RESET}    \033[0K")
+                        _sys.stdout.write("\033[u")
+                        _sys.stdout.flush()
+                        _time.sleep(interval)
+                        t -= 1
+                    if not stop_event.is_set():
+                        # Time expired: lock combat and notify
+                        player.locked_in_combat = True
+                        player.precombat_bonus = None
+                        player.pending_precombat = None
+                        _sys.stdout.write("\033[s\033[1A\r")
+                        _sys.stdout.write("\033[38;2;255;102;102mCombat Entered\033[0m\033[0K")
+                        _sys.stdout.write("\033[u")
+                        _sys.stdout.flush()
+                        try:
+                            _print_combat_guide_once()
+                        except Exception:
+                            pass
+                anim_thread = threading.Thread(target=_animate_precombat, daemon=True)
+                anim_thread.start()
+
+                # Prompt for input while bar animates
+                command = _menu(player.current_room["exits"], player.current_room["items"], player.inventory)
+                # stop animation cleanly once we have input
+                stop_event.set()
+                try:
+                    anim_thread.join(timeout=0.2)
+                except Exception:
+                    pass
+                # If the player chose to attack the pending enemy quickly, bonus is set in execute_attack
+            else:
+                command = _menu(player.current_room["exits"], player.current_room["items"], player.inventory)
+
+            execute_command(command)
+            # check if player died after action
+            if player.stats.get("health", 0) <= 0:
+                print("\n————————————————————————————————————————————————————————————————————————————————————————————————————")
+                if player.current_room.get("enemies") and len(player.current_room["enemies"]) > 0:
+                    print(f"{RED}GAME OVER: YOU HAVE BEEN KILLED BY THE {player.current_room['enemies'][0]['name'].upper()}{RESET}")
+                else:
+                    print(f"{RED}GAME OVER: YOU HAVE DIED.{RESET}")
+                print("————————————————————————————————————————————————————————————————————————————————————————————————————\n")
+                exit()
 
 
-
-# Are we being run as a script? If so, run main().
-# '__main__' is the name of the scope in which top-level code executes.
-# See https://docs.python.org/3.4/library/__main__.html for explanation
 if __name__ == "__main__":
     main()
-
