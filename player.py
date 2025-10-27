@@ -5,6 +5,7 @@ current_room = rooms["Starter"]
 current_turn = 0
 change_turn = False
 room_change = True
+menu_state = False
 
 inventory = [weapon_dev, armour_dev]
 
@@ -20,7 +21,7 @@ stats = {
     "evasion": 10,
 }
 
-gold = 0
+gold = 1000
 charge_attack = False
 evade_attack = False
 first_attack = True

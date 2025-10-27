@@ -152,47 +152,49 @@ def main():
             player.current_turn = 1
             player.room_change = False
 
-        print(f"TURN: {player.current_turn}")
-        print("\n — Mini Map — \n")
-        draw_minimap(player.current_room)
-        player.print_health()
-        print("\nWhat do you want to do?")
-        # Use voice input if enabled; fallback handled inside
-        def _menu(_exits, _room_items, _inv_items):
-            user_input = get_player_input(f"{PASTEL_GREEN}> {RESET}")
-            normalised_user_input = normalise_input(user_input)
-            return normalised_user_input
-        command = _menu(player.current_room["exits"], player.current_room["items"], player.inventory)
-        # Precombat prompt if time-based combat and an enemy just spotted you (pending precombat)
-        if getattr(player, "time_based_combat", False) and getattr(player, "pending_precombat", None) and not getattr(player, "locked_in_combat", False):
-            print("\nA foe eyes you. Enter combat or escape!")
-            print("Type an action now to ESCAPE (e.g., 'go south'), or type 'attack ' + enemy to ENTER with a bonus!")
-            # countdown bar
-            import sys as _sys
-            import time as _time
-            total = 18
-            for t in range(total, 0, -1):
-                _sys.stdout.write(f"\rPre-Combat: {RED}{'|'*t}{RESET}    ")
+        if player.menu_state == False:
+
+            player.print_health()
+            print(f"TURN: {player.current_turn}")
+            print("\n — Mini Map — \n")
+            draw_minimap(player.current_room)
+            print("\nWhat do you want to do?")
+            # Use voice input if enabled; fallback handled inside
+            def _menu(_exits, _room_items, _inv_items):
+                user_input = get_player_input(f"{PASTEL_GREEN}> {RESET}")
+                normalised_user_input = normalise_input(user_input)
+                return normalised_user_input
+            command = _menu(player.current_room["exits"], player.current_room["items"], player.inventory)
+            # Precombat prompt if time-based combat and an enemy just spotted you (pending precombat)
+            if getattr(player, "time_based_combat", False) and getattr(player, "pending_precombat", None) and not getattr(player, "locked_in_combat", False):
+                print("\nA foe eyes you. Enter combat or escape!")
+                print("Type an action now to ESCAPE (e.g., 'go south'), or type 'attack ' + enemy to ENTER with a bonus!")
+                # countdown bar
+                import sys as _sys
+                import time as _time
+                total = 18
+                for t in range(total, 0, -1):
+                    _sys.stdout.write(f"\rPre-Combat: {RED}{'|'*t}{RESET}    ")
+                    _sys.stdout.flush()
+                    _time.sleep(0.25)
+                _sys.stdout.write("\rPre-Combat:            \n")
                 _sys.stdout.flush()
-                _time.sleep(0.25)
-            _sys.stdout.write("\rPre-Combat:            \n")
-            _sys.stdout.flush()
-            # If still pending, lock into combat now
-            if getattr(player, "pending_precombat", None):
-                print("\033[38;2;255;102;102mCombat Entered\033[0m")
-                player.locked_in_combat = True
-                player.precombat_bonus = None
-                player.pending_precombat = None
-        execute_command(command)
-        # check if player died after action
-        if player.stats.get("health", 0) <= 0:
-            print("\n————————————————————————————————————————————————————————————————————————————————————————————————————")
-            if player.current_room.get("enemies") and len(player.current_room["enemies"]) > 0:
-                print(f"{RED}GAME OVER: YOU HAVE BEEN KILLED BY THE {player.current_room['enemies'][0]['name'].upper()}{RESET}")
-            else:
-                print(f"{RED}GAME OVER: YOU HAVE DIED.{RESET}")
-            print("————————————————————————————————————————————————————————————————————————————————————————————————————\n")
-            exit()
+                # If still pending, lock into combat now
+                if getattr(player, "pending_precombat", None):
+                    print("\033[38;2;255;102;102mCombat Entered\033[0m")
+                    player.locked_in_combat = True
+                    player.precombat_bonus = None
+                    player.pending_precombat = None
+            execute_command(command)
+            # check if player died after action
+            if player.stats.get("health", 0) <= 0:
+                print("\n————————————————————————————————————————————————————————————————————————————————————————————————————")
+                if player.current_room.get("enemies") and len(player.current_room["enemies"]) > 0:
+                    print(f"{RED}GAME OVER: YOU HAVE BEEN KILLED BY THE {player.current_room['enemies'][0]['name'].upper()}{RESET}")
+                else:
+                    print(f"{RED}GAME OVER: YOU HAVE DIED.{RESET}")
+                print("————————————————————————————————————————————————————————————————————————————————————————————————————\n")
+                exit()
 
 
 if __name__ == "__main__":

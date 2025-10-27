@@ -410,7 +410,7 @@ village_east = {
     },
 
     "items": [],
-    "interacts": [],
+    "interacts": [npc_merchant],
     "enemies": [],
 }
 
