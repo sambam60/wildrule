@@ -185,6 +185,7 @@ temple_sword = {
     "id": "templesword",
     "name": "Temple Sword",
     "type": "item",
-    "description": """temple sword""",
+    "description": """The mythical sword of Wildrule. It radiates an aura full of power and hope.
+This item can only be obtainable after defeating the almighty, rare and elusive Skeleton King.""",
     "price": 0,
 }
