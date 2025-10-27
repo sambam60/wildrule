@@ -116,10 +116,13 @@ async def health():
 def main() -> None:
     import uvicorn
 
+    # Render sets PORT environment variable
+    port = int(os.environ.get("PORT", 8000))
+    
     uvicorn.run(
         "server:app",
         host="0.0.0.0",
-        port=8000,
+        port=port,
         reload=False,
     )
 

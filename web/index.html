@@ -25,17 +25,12 @@
     <div id="terminal"></div>
     <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
+    <!-- Config: Set WS_SERVER_URL to your deployed backend URL (e.g., "your-app.onrender.com") -->
+    <script>window.WS_SERVER_URL = undefined;</script>
     <script>
-      const term = new Terminal({
-        cursorBlink: true,
-        fontFamily: 'Menlo, Monaco, Consolas, "Courier New", monospace',
-        fontSize: 14,
-        theme: {
-          background: '#0b0d14',
-          foreground: '#dcdcdc',
-          cursor: '#58a6ff',
-        },
-      });
+      let term;
+      let ws;
+      
       function startTerminal() {
         const container = document.getElementById('terminal');
         // Guard: wait for libs
@@ -43,7 +38,7 @@
           setTimeout(startTerminal, 50);
           return;
         }
-        const term = new window.Terminal({
+        term = new window.Terminal({
           cursorBlink: true,
           fontFamily: 'Menlo, Monaco, Consolas, "Courier New", monospace',
           fontSize: 14,
@@ -58,21 +53,34 @@
 
         // WebSocket wiring
         function append(text) { term.write(text); }
+        
+        // Get WebSocket URL from window.WS_SERVER_URL or use location.host
+        const wsHost = window.WS_SERVER_URL || location.host;
         const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-        const ws = new WebSocket(`${proto}://${location.host}/ws`);
+        const wsUrl = wsHost.startsWith('ws://') || wsHost.startsWith('wss://') 
+          ? `${wsHost}/ws` 
+          : `${proto}://${wsHost}/ws`;
+        
+        console.log('Connecting to:', wsUrl);
+        
+        ws = new WebSocket(wsUrl);
         ws.addEventListener('open', () => {
           append('\r\nConnected to server...\r\n');
           setTimeout(() => { ws.send('n\n'); setTimeout(() => ws.send('n\n'), 120); }, 250);
         });
         ws.addEventListener('message', (e) => append(e.data));
         ws.addEventListener('close', () => append('\r\n[Connection closed]\r\n'));
-        ws.addEventListener('error', () => append('\r\n[Connection error]\r\n'));
+        ws.addEventListener('error', (e) => {
+          console.error('WebSocket error:', e);
+          append('\r\n[Connection error - check console]\r\n');
+        });
+        
         // Simple line editor: buffer until Enter, support Backspace
         let buf = '';
         term.onData(d => {
           if (d === '\r' || d === '\n') {
             term.write('\r\n');
-            if (ws.readyState === WebSocket.OPEN) ws.send(buf + '\n');
+            if (ws && ws.readyState === WebSocket.OPEN) ws.send(buf + '\n');
             buf = '';
             return;
           }
@@ -96,45 +104,6 @@
       } else {
         startTerminal();
       }
-
-      let ws;
-
-      function append(text) {
-        term.write(text);
-      }
-
-      function connect() {
-        const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-        ws = new WebSocket(`${proto}://${location.host}/ws`);
-
-        ws.addEventListener('open', () => {
-          append('\r\nConnected to server...\r\n');
-          setTimeout(() => {
-            ws.send('n\n');
-            setTimeout(() => ws.send('n\n'), 120);
-          }, 250);
-        });
-
-        ws.addEventListener('message', (event) => {
-          append(event.data);
-        });
-
-        ws.addEventListener('close', () => {
-          append('\r\n[Connection closed]\r\n');
-        });
-
-        ws.addEventListener('error', () => {
-          append('\r\n[Connection error]\r\n');
-        });
-      }
-
-      term.onData(data => {
-        if (ws && ws.readyState === WebSocket.OPEN) {
-          ws.send(data);
-        }
-      });
-
-      connect();
     </script>
   </body>
 </html>
