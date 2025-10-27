@@ -54,26 +54,73 @@
         // WebSocket wiring
         function append(text) { term.write(text); }
         
-        // Get WebSocket URL from window.WS_SERVER_URL or use location.host
-        const wsHost = window.WS_SERVER_URL || location.host;
-        const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-        const wsUrl = wsHost.startsWith('ws://') || wsHost.startsWith('wss://') 
-          ? `${wsHost}/ws` 
-          : `${proto}://${wsHost}/ws`;
+        // Get server URL from window.WS_SERVER_URL or use location.host
+        const serverHost = window.WS_SERVER_URL || location.host;
+        const proto = location.protocol === 'https:' ? 'https' : 'http';
+        const serverUrl = `${proto}://${serverHost}`;
         
-        console.log('Connecting to:', wsUrl);
+        // Health check to wake up instance
+        let dots = 0;
+        const statusInterval = setInterval(() => {
+          dots = (dots + 1) % 4;
+          const dotsStr = '.'.repeat(dots);
+          term.write(`\r\x1b[K[${
+            new Date().toLocaleTimeString()
+          }] Waking up instance${dotsStr}    `);
+        }, 500);
         
-        ws = new WebSocket(wsUrl);
-        ws.addEventListener('open', () => {
-          append('\r\nConnected to server...\r\n');
-          setTimeout(() => { ws.send('n\n'); setTimeout(() => ws.send('n\n'), 120); }, 250);
-        });
-        ws.addEventListener('message', (e) => append(e.data));
-        ws.addEventListener('close', () => append('\r\n[Connection closed]\r\n'));
-        ws.addEventListener('error', (e) => {
-          console.error('WebSocket error:', e);
-          append('\r\n[Connection error - check console]\r\n');
-        });
+        let attempts = 0;
+        const maxAttempts = 100; // ~50 seconds with 500ms intervals
+        
+        function checkHealth() {
+          attempts++;
+          
+          fetch(`${serverUrl}/health`)
+            .then(response => {
+              if (response.ok) {
+                clearInterval(statusInterval);
+                append('\r\n\x1b[K✓ Server is awake! Connecting...\r\n');
+                connectWebSocket();
+              } else {
+                throw new Error('Health check failed');
+              }
+            })
+            .catch(error => {
+              if (attempts >= maxAttempts) {
+                clearInterval(statusInterval);
+                append('\r\n\x1b[K✗ Failed to wake up server after multiple attempts.\r\n');
+                append('Please refresh the page and try again.\r\n');
+              } else {
+                setTimeout(checkHealth, 500);
+              }
+            });
+        }
+        
+        function connectWebSocket() {
+          // Get WebSocket URL
+          const wsHost = window.WS_SERVER_URL || location.host;
+          const wsProto = location.protocol === 'https:' ? 'wss' : 'ws';
+          const wsUrl = wsHost.startsWith('ws://') || wsHost.startsWith('wss://') 
+            ? `${wsHost}/ws` 
+            : `${wsProto}://${wsHost}/ws`;
+          
+          console.log('Connecting to:', wsUrl);
+          
+          ws = new WebSocket(wsUrl);
+          ws.addEventListener('open', () => {
+            append('Connected to server...\r\n');
+            setTimeout(() => { ws.send('n\n'); setTimeout(() => ws.send('n\n'), 120); }, 250);
+          });
+          ws.addEventListener('message', (e) => append(e.data));
+          ws.addEventListener('close', () => append('\r\n[Connection closed]\r\n'));
+          ws.addEventListener('error', (e) => {
+            console.error('WebSocket error:', e);
+            append('\r\n[Connection error - check console]\r\n');
+          });
+        }
+        
+        // Start health check
+        setTimeout(checkHealth, 100);
         
         // Simple line editor: buffer until Enter, support Backspace
         let buf = '';
