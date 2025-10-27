@@ -86,7 +86,7 @@ For voice input features, download the Vosk offline speech recognition model:
 
 Once installed, simply run:
 ```bash
-python game.py
+python3 game.py
 ```
 
 The game will automatically detect available features and continue without errors if voice/TTS is unavailable.
