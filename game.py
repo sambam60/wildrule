@@ -12,7 +12,7 @@ import textwrap
 import tts
 import voice_input
 from minimap import draw_minimap
-from combat import timed_enemy_attack
+from combat import timed_enemy_attack, _print_combat_guide_once
 import threading
 
 # ANSI colour constants
@@ -200,6 +200,10 @@ def main():
                         _sys.stdout.write("\033[38;2;255;102;102mCombat Entered\033[0m\033[0K")
                         _sys.stdout.write("\033[u")
                         _sys.stdout.flush()
+                        try:
+                            _print_combat_guide_once()
+                        except Exception:
+                            pass
                 anim_thread = threading.Thread(target=_animate_precombat, daemon=True)
                 anim_thread.start()
 
