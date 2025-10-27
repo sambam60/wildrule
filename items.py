@@ -7,6 +7,7 @@ weapon_default = {
     "name": "Bare Hands",
     "type": "weapon",
     "description": "default weapon",
+    "price": 0,
     "damage": 10,
 }
 
@@ -16,6 +17,7 @@ armour_default = {
     "name": "t-shirt",
     "type": "armour",
     "description": "default armour",
+    "price": 0,
     "defence": 5,
 }
 
@@ -25,6 +27,7 @@ accessory_default = {
     "name": "rusty ring",
     "type": "armour",
     "description": "default accessory",
+    "price": 0,
     "buff": None,
     "buff_desc": "N/A",
 }
@@ -34,6 +37,7 @@ weapon_dev = {
     "name": "dev weapon",
     "type": "weapon",
     "description": "dev weapon",
+    "price": 5000,
     "damage": 75,
 }
 
@@ -42,6 +46,7 @@ armour_dev = {
     "name": "dev armour",
     "type": "armour",
     "description": "dev armour",
+    "price": 5000,
     "defence": 50,
 }
 
@@ -51,6 +56,7 @@ accessory_horn = {
     "type": "accessory",
     "description": """A fine ivory horn from a male bull, famous for its antique value as a hunter's trophy and a collector's item.
 This accessory will increase the damage multiplier of your charge attacks to 3x from the 2.5x base multiplier.""",
+    "price": 0,
     "buff": 3,
     "buff_desc": "Player charge Attacks will deal 3x more normal damage instead of 2.5x more normal damage.",
 }
@@ -61,6 +67,7 @@ accessory_feather = {
     "type": "accessory",
     "description": """A soft delicate feather taken from the wing of a Canadian Goose, an animal infamous for its aggression and persistence.
 This accessory will increase the damage multiplier of your counter attacks to 2.5x from the 2x base multiplier.""",
+    "price": 0,
     "buff": 2.5,
     "buff_desc": "Successful player counter attacks will deal 2.5x more normal damage instead of 2x more normal damage.",
 }
@@ -71,6 +78,7 @@ accessory_paw = {
     "type": "accessory",
     "description": """A furry yet lightweight paw taken from a leg of a nimble snow leopard.
 This accessory will add +10 to your evasion stat.""",
+    "price": 0,
     "buff": 25,
     "buff_desc": "Player evasion stat is increased by 25.",
 }
@@ -81,6 +89,7 @@ accessory_hide = {
     "type": "accessory",
     "description": """A tough and priceless hide from the body of a black rhinoceros.
 This accessory will add +10 to your defence stat.""",
+    "price": 0,
     "buff": 10,
     "buff_desc": "Player defence stat is increased by 10.",
 }
@@ -90,6 +99,7 @@ item_city_key_1 = {
     "name": "Gate Key Part 1",
     "type": "item",
     "description": """A part from a broken key. Seems like this used to be the bow of the key.""",
+    "price": 400,
 }
 
 item_city_key_2 = {
@@ -97,7 +107,52 @@ item_city_key_2 = {
     "name": "Gate Key Part 2",
     "type": "item",
     "description": """A part from a broken key. Seems like this used to be the blade of the key.""",
+    "price": 400,
 }
+
+item_healing_potion = {
+    "id": "health",
+    "name": "Health Potion",
+    "type": "item",
+    "description": """A delicate potion brewed from a skilled alchemist. Bright red liquid swirls inside the flask.
+This consumable item will heal 75 health to the player.""",
+    "price": 75,
+}
+
+weapon_spear = {
+    "id": "spear",
+    "name": "Iron-Tipped Spear",
+    "type": "weapon",
+    "description": """A wooden spear with a sharp tip made of iron.
+This weapon has a base attack of """,
+    "price": 200,
+    "damage": 25,
+}
+
+armour_wooden_shield = {
+    "id": "woodshield",
+    "name": "Wooden Shield",
+    "type": "armour",
+    "description": """A wooden shield, with an iron-reinforced border.
+This armour piece has a base defence of 15.""",
+    "price": 200,
+    "defence": 15,
+}
+
+accessory_badge = {
+    "id": "badge",
+    "name": "Hunter Badge",
+    "type": "accessory",
+    "description": """A leather badge, boasting the classic hunter's insignia of two crossed swords.
+This accessory will add +5 to your attack stat.""",
+    "price": 150,
+    "buff": 5,
+    "buff_desc": "Player attack stat is increased by 5.",
+}
+
+
+
+
 
 item_forest_trophy = {
     "id": "foresttrophy",
@@ -105,6 +160,7 @@ item_forest_trophy = {
     "type": "item",
     "description": """A shining trophy, decorated with a wreath of tree back and moss.
 This item is only obtainable by killing the rare and elusive Forest Giant.""",
+    "price": 0,
 }
 
 item_tundra_trophy = {
@@ -113,6 +169,7 @@ item_tundra_trophy = {
     "type": "item",
     "description": """A shining trophy, decorated with a wreath of snow and mistletoe.
 This item is only obtainable by killing the rare and elusive Tundra Werewolf.""",
+    "price": 0,
 }
 
 item_plains_trophy = {
@@ -121,6 +178,7 @@ item_plains_trophy = {
     "type": "item",
     "description": """A shining trophy, decorated with a wreath of wheat and sunflowers.
 This item is only obtainable by killing the rare and elusive Plains Python.""",
+    "price": 0,
 }
 
 temple_sword = {
@@ -128,4 +186,5 @@ temple_sword = {
     "name": "Temple Sword",
     "type": "item",
     "description": """temple sword""",
+    "price": 0,
 }

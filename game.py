@@ -140,25 +140,27 @@ def main():
             player.current_turn = 1
             player.room_change = False
 
-        player.print_health()
-        print(f"TURN: {player.current_turn}")
-        print("What do you want to do?")
-        # Use voice input if enabled; fallback handled inside
-        def _menu(_exits, _room_items, _inv_items):
-            user_input = get_player_input(f"{PASTEL_GREEN}> {RESET}")
-            normalised_user_input = normalise_input(user_input)
-            return normalised_user_input
-        command = _menu(player.current_room["exits"], player.current_room["items"], player.inventory)
-        execute_command(command)
-        # check if player died after action
-        if player.stats.get("health", 0) <= 0:
-            print("\n————————————————————————————————————————————————————————————————————————————————————————————————————")
-            if player.current_room.get("enemies") and len(player.current_room["enemies"]) > 0:
-                print(f"{RED}GAME OVER: YOU HAVE BEEN KILLED BY THE {player.current_room['enemies'][0]['name'].upper()}{RESET}")
-            else:
-                print(f"{RED}GAME OVER: YOU HAVE DIED.{RESET}")
-            print("————————————————————————————————————————————————————————————————————————————————————————————————————\n")
-            exit()
+        if player.menu_state == False:
+
+            player.print_health()
+            print(f"TURN: {player.current_turn}")
+            print("What do you want to do?")
+            # Use voice input if enabled; fallback handled inside
+            def _menu(_exits, _room_items, _inv_items):
+                user_input = get_player_input(f"{PASTEL_GREEN}> {RESET}")
+                normalised_user_input = normalise_input(user_input)
+                return normalised_user_input
+            command = _menu(player.current_room["exits"], player.current_room["items"], player.inventory)
+            execute_command(command)
+            # check if player died after action
+            if player.stats.get("health", 0) <= 0:
+                print("\n————————————————————————————————————————————————————————————————————————————————————————————————————")
+                if player.current_room.get("enemies") and len(player.current_room["enemies"]) > 0:
+                    print(f"{RED}GAME OVER: YOU HAVE BEEN KILLED BY THE {player.current_room['enemies'][0]['name'].upper()}{RESET}")
+                else:
+                    print(f"{RED}GAME OVER: YOU HAVE DIED.{RESET}")
+                print("————————————————————————————————————————————————————————————————————————————————————————————————————\n")
+                exit()
 
 
 if __name__ == "__main__":

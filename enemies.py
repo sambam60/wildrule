@@ -138,7 +138,7 @@ enemy_leopard = {
     "counter_attack": { "damage": 35, "chance": 30, },
 
     "gold": 65,
-    "loot": { "item": accessory_paw, "chance": 0, }
+    "loot": { "item": accessory_paw, "chance": 15, }
 }
 
 enemy_owl = {

@@ -430,7 +430,7 @@ You can go WEST to the western side of the village, or EAST back into the plains
     },
 
     "items": [],
-    "interacts": [],
+    "interacts": [npc_merchant],
     "enemies": [],
 }
 
