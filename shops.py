@@ -1,3 +1,9 @@
+"""
+This file acts as the merchant system, which is used as an item shop for the player. 
+It allows the user to buy or sell items during their adventure. The merchant will be 
+accessible in certain locations within the over world, helping the player earn stronger 
+items as they collect more 'gold,' which is the currency used towards buying items.
+"""
 from map import rooms
 import player
 from items import *

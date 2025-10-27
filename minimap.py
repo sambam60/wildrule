@@ -59,7 +59,7 @@ def draw_minimap(current_room):
             if room: # if there is a room (not none)
                 room_reference = rooms.get(room) # gets the reference of the room's properties
                 if room_reference == current_room: #if the room is the same as current room
-                    line += "[X] " # sets x in box for current room
+                    line += "[\033[34mX\033[0m] " # sets x in box for current room (blue)
                 elif room_reference["explored"] == True: # checks if room has already been visited by the player before
                     match room_reference["area"]: # sets letter in box based on room area type
                         case "Forest":
