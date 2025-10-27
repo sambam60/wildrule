@@ -32,22 +32,13 @@ accessory_default = {
     "buff_desc": "N/A",
 }
 
-weapon_dev = {
-    "id": "wdev",
-    "name": "Rusty Sword",
+weapon_sword = {
+    "id": "sword",
+    "name": "Wooden Sword",
     "type": "weapon",
-    "description": "A weathered sword with nicks along the blade. Despite its appearance, it's surprisingly effective.",
+    "description": "A weathered , wooden sword with nicks along the blade. Despite its appearance, it's still effective for weaker enemies.",
     "price": 0,
-    "damage": 75,
-}
-
-armour_dev = {
-    "id": "adev",
-    "name": "Rusty Armour",
-    "type": "armour",
-    "description": "Timeworn armor pieces that have seen better days. Still offers decent protection.",
-    "price": 0,
-    "defence": 50,
+    "damage": 18,
 }
 
 accessory_horn = {
@@ -66,10 +57,10 @@ accessory_feather = {
     "name": "Goose Feather",
     "type": "accessory",
     "description": """A soft delicate feather taken from the wing of a Canadian Goose, an animal infamous for its aggression and persistence.
-This accessory will increase the damage multiplier of your counter attacks to 2.5x from the 2x base multiplier.""",
+This accessory will increase the damage multiplier of your counter attacks to 3x from the 2x base multiplier.""",
     "price": 0,
-    "buff": 2.5,
-    "buff_desc": "Successful player counter attacks will deal 2.5x more normal damage instead of 2x more normal damage.",
+    "buff": 3,
+    "buff_desc": "Successful player counter attacks will deal 3x more normal damage instead of 2x more normal damage.",
 }
 
 accessory_paw = {
@@ -94,6 +85,14 @@ This accessory will add +10 to your defence stat.""",
     "buff_desc": "Player defence stat is increased by 10.",
 }
 
+item_chest_key = {
+    "id": "key",
+    "name": "Chest Key",
+    "type": "item",
+    "description": """A key used to unlock a locked chest.""",
+    "price": 200,
+}
+
 item_city_key_1 = {
     "id": "key1",
     "name": "Gate Key Part 1",
@@ -111,7 +110,7 @@ item_city_key_2 = {
 }
 
 item_healing_potion = {
-    "id": "health",
+    "id": "hp",
     "name": "Health Potion",
     "type": "item",
     "description": """A delicate potion brewed from a skilled alchemist. Bright red liquid swirls inside the flask.
@@ -124,7 +123,7 @@ weapon_spear = {
     "name": "Iron-Tipped Spear",
     "type": "weapon",
     "description": """A wooden spear with a sharp tip made of iron.
-This weapon has a base attack of """,
+This weapon has a base attack of 25.""",
     "price": 200,
     "damage": 25,
 }
@@ -150,9 +149,65 @@ This accessory will add +5 to your attack stat.""",
     "buff_desc": "Player attack stat is increased by 5.",
 }
 
+weapon_club = {
+    "id": "club",
+    "name": "Spiked Club",
+    "type": "weapon",
+    "description": """A wooden club spiked with iron nails.
+This weapon has a base attack of 35.""",
+    "price": 350,
+    "damage": 35,
+}
 
+armour_jacket = {
+    "id": "jacket",
+    "name": "Snow Jacket",
+    "type": "armour",
+    "description": """A think snow jacket, made of fur and cotton.
+This armour piece has a base defence of 25.""",
+    "price": 350,
+    "defence": 25,
+}
 
+weapon_longsword = {
+    "id": "longsword",
+    "name": "Silver Longsword",
+    "type": "weapon",
+    "description": """A medieval longsword made of an alloy of iron and silver.
+This weapon has a base attack of 50.""",
+    "price": 500,
+    "damage": 50,
+}
 
+armour_chainmail = {
+    "id": "chainmail",
+    "name": "Chainmail Chestpiece",
+    "type": "armour",
+    "description": """A strong chestpiece made of iron chainmail. Famous for its use in battle by knights.
+This armour piece has a base defence of 25.""",
+    "price": 500,
+    "defence": 50,
+}
+
+armour_iron_shield = {
+    "id": "ironshield",
+    "name": "Iron Shield",
+    "type": "armour",
+    "description": """An iron-reinforced shield.
+This armour piece has a base defence of 20.""",
+    "price": 250,
+    "defence": 20,
+}
+
+weapon_metalclub = {
+    "id": "metalclub",
+    "name": "Metallic Club",
+    "type": "weapon",
+    "description": """A large iron-reinforced club, with sharp blades on its end.
+This weapon has a base attack of 40.""",
+    "price": 400,
+    "damage": 40,
+}
 
 item_forest_trophy = {
     "id": "foresttrophy",

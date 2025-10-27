@@ -11,19 +11,32 @@ import textwrap
 import tts
 import voice_input
 
-village_shop = [weapon_spear, armour_wooden_shield, accessory_badge, item_healing_potion, item_city_key_1]
-igloo_shop = []
-kingdom_shop = []
+village_shop = [weapon_spear, armour_wooden_shield, accessory_badge, item_healing_potion, item_chest_key, item_city_key_1]
+igloo_shop = [weapon_club, armour_jacket, item_healing_potion, item_chest_key, item_city_key_2]
+kingdom_shop = [weapon_longsword, armour_chainmail, item_healing_potion, item_chest_key]
 
 def open_shop():
-    npc_merchant["state"] = 1
     global village_shop
     global igloo_shop
     global kingdom_shop
 
     match player.current_room["id"]:
+
         case "village_e":
+            npc_merchant["inventory"] = []
             items_for_sale = village_shop
+            for item in items_for_sale:
+                npc_merchant["inventory"].append(item)
+
+        case "igloos_w":
+            npc_merchant["inventory"] = []
+            items_for_sale = igloo_shop
+            for item in items_for_sale:
+                npc_merchant["inventory"].append(item)
+
+        case "kingdom_north":
+            npc_merchant["inventory"] = []
+            items_for_sale = kingdom_shop
             for item in items_for_sale:
                 npc_merchant["inventory"].append(item)
 

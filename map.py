@@ -46,7 +46,7 @@ forest_north = {
         "west": "Forest_NW",
     },
 
-    "items": [],
+    "items": [weapon_sword],
     "interacts": [],
     "enemies": [],
 }
@@ -113,7 +113,7 @@ forest_south = {
     },
 
     "items": [],
-    "interacts": [],
+    "interacts": [obj_chest1],
     "enemies": [],
 }
 
@@ -181,7 +181,7 @@ tundra_north = {
     },
 
     "items": [],
-    "interacts": [],
+    "interacts": [obj_chest3],
     "enemies": [],
 }
 
@@ -264,7 +264,7 @@ igloos_west = {
     },
 
     "items": [],
-    "interacts": [],
+    "interacts": [npc_merchant],
     "enemies": [],
 }
 
@@ -282,7 +282,7 @@ igloos_east = {
         "west": "Igloos_W",
     },
 
-    "items": [],
+    "items": [item_healing_potion],
     "interacts": [],
     "enemies": [],
 }
@@ -347,7 +347,7 @@ plains_southwest = {
     },
 
     "items": [],
-    "interacts": [],
+    "interacts": [obj_chest2],
     "enemies": [],
 }
 
@@ -368,7 +368,7 @@ plains_south = {
         "west": "Plains_SW",
     },
 
-    "items": [item_city_key_1, item_city_key_2],
+    "items": [],
     "interacts": [npc_guard],
     "enemies": [],
 }
@@ -428,7 +428,7 @@ village_west = {
         "east": "Village_E",
     },
 
-    "items": [],
+    "items": [item_healing_potion],
     "interacts": [],
     "enemies": [],
 }
@@ -449,7 +449,7 @@ kingdom_north = {
     },
 
     "items": [],
-    "interacts": [],
+    "interacts": [npc_merchant],
     "enemies": [],
 }
 
@@ -468,8 +468,25 @@ kingdom_south = {
     },
 
     "items": [item_forest_trophy, item_plains_trophy, item_tundra_trophy],
-    "interacts": [npc_dungeonkeeper],
+    "interacts": [npc_dungeonkeeper, obj_mantle],
     "enemies": [],
+}
+
+room_dungeon = {
+
+    "id": "dungeon",
+    "name": "The Dungeon",
+    "area": "Dungeon",
+    "explored": False,
+
+    "description":
+"""The infamous dungeon under the Little Kingdom. What was once an old prison has now turned into the abode of the leader of the monsters, the Skeleton King. No hero who has entered the dungeon has made it out alive.""",
+
+    "exits": {},
+
+    "items": [],
+    "interacts": [],
+    "enemies": [skeleton_king],
 }
 
 # ROOMS DICTIONARY
@@ -503,4 +520,5 @@ rooms = { # MAKE SURE TO ADD NEW ROOMS TO THIS DICTIONARY
 
     "Kingdom_N": kingdom_north,
     "Kingdom_S": kingdom_south,
+    "Dungeon": room_dungeon,
 }

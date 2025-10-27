@@ -37,7 +37,8 @@ def turn_change(function, *args): # CONTROLS FUNCTIONS THAT WILL RUN WHEN A TURN
             spawn_enemy()
 
         case "print_room":
-            spawn_enemy()
+            if player.current_room != rooms.get("Dungeon"):
+                spawn_enemy()
 
         case "player_attack":
             if len(player.current_room["enemies"]) > 0:
@@ -140,7 +141,9 @@ def execute_command(command): # Command list
             exit()
 
         case "test":
-            draw_minimap(player.current_room)
+           print(obj_chest1["state"])
+           print(obj_chest2["state"])
+           print(obj_chest3["state"])
 
         case _:
             print(f"\nERROR: '{command[0]}' is not a valid command. Please enter 'help' for a list of valid commands.\n")
@@ -170,6 +173,14 @@ def print_room_enemies(room):
     room_enemies = room["enemies"]
     if len(room_enemies) > 0:
         print(f"A wild {room_enemies[0]["name"].upper()} spots you!")
+
+
+
+def print_room_interactions(room):
+    
+    if len(room["interacts"]) > 0:
+        room_interactions = list_of_items(room["interacts"])
+        print(f"There is {room_interactions} nearby.\n")
 
 
 
@@ -278,7 +289,10 @@ def print_room(room): # Displays details of the current room when room changes o
     wrapped_lines = [_wrap_block(p) for p in description_text.split("\n") if p.strip() != ""]
     wrapped_text = "\n".join(wrapped_lines)
     say_text(wrapped_text)
+    print()
     print_room_items(room)
+    print_room_interactions(room)
+    print()
     print_room_enemies(room)
     print()
 
@@ -306,13 +320,37 @@ def is_valid_exit(exits, chosen_exit):
 
 def check_exit_availability(direction): # This function stores exits that can only be accessed after certain game progress
 
-    match player.current_room["name"]:
+    match player.current_room["id"]:
 
-        case "test room 1":
-            if direction == "south" and npc_guard["state"] == 0:
-                print("\nYou cannot go south because the door is locked.\n")
-                return False
+        case "plains_s":
+            if direction == "south":
+                if npc_guard["state"] < 2:
+                    print("\nYou cannot go south because the city gate is locked.\n")
+                    return False
+                elif npc_guard["state"] == 2:
+                    return True
             
+        case "kingdom_south":
+            if direction == "dungeon":
+                if npc_dungeonkeeper["state"] < 2:
+                    print("\nYou cannot enter the dungeon because the dungeon gate is locked.\n")
+                    return False
+                elif npc_guard["state"] == 2:
+                    return True
+                
+        case "dungeon":
+            has_sword = False
+            for item in player.inventory:
+                if item["id"] == "templesword":
+                    has_sword = True
+                    break
+
+            if has_sword == False:
+                print("\nThe dungeon gate is locked from the outside. Seems like you're all on your own now.\n")
+                return False
+            else:
+                return True
+        
         case _:
             return True
         
@@ -363,6 +401,31 @@ def execute_go(direction): # Movement command
                     player.change_turn = True
                     turn_change(print_room, player.current_room)
                     explore_room(player.current_room)
+
+                case "dungeon":
+                    if player.current_room["id"] != "kingdom_south":
+                        print(f"\nERROR: '{direction}' is not a valid exit or does not exist.\n")
+                    else:
+                        confirmation = None
+                        while confirmation == None:
+                            confirmation = str(input("You cannot leave once you enter the dungeon. Are you sure you want to enter? (y/n) "))
+                            if confirmation == "y" or confirmation == "yes":
+                                player.current_room = rooms.get("Dungeon")
+                                player.change_turn = True
+                                turn_change(print_room, player.current_room)
+                                explore_room(player.current_room)
+                            else:
+                                print(confirmation)
+                                print("\nYou decided you are not ready yet.\n")
+
+                case "exit":
+                    if player.current_room["id"] != "dungeon":
+                        print(f"\nERROR: '{direction}' is not a valid exit or does not exist.\n")
+                    else:
+                        player.current_room = rooms.get("Kingdom_S")
+                        player.change_turn = True
+                        turn_change(print_room, player.current_room)
+                        explore_room(player.current_room)
                         
                 case _:
                     print(f"\nERROR: '{direction}' is not a valid exit or does not exist.\n")
@@ -418,15 +481,12 @@ def execute_help(exits, room_items, inv_items): # Prints all valid commands that
     # Valid exits in the current room
     for direction in exits:
         print(f"GO {direction.upper()} to {exit_leads_to(exits, direction)}.")
-    print()
     # Take items from current room
     for item in room_items:
         print(f"TAKE {item["id"].upper()} to take {item["name"]}.")
-    print()
     # Valid interactions in the current room
     for interact in player.current_room["interacts"]:
         print(f"INTERACT {interact["id"].upper()} to interact with {interact["name"]}.")
-    print()
     # Valid interactions for enemies in the current room
     for enemy in player.current_room["enemies"]:
         print(f"ATTACK {player.current_room["enemies"][0]["id"].upper()} [attack type] to attack the {player.current_room["enemies"][0]["name"]}.")
@@ -441,6 +501,7 @@ def execute_help(exits, room_items, inv_items): # Prints all valid commands that
     print("USE [item id] to use an item from your inventory.")
     print("EQUIP [item id] to equip an item from your inventory.")
     print("UNEQUIP [item id] to unequip an item from your equipment.")
+    print("WAIT to skip the current turn.")
     print("\nQUIT to close the program.\n")
 
 
@@ -486,6 +547,15 @@ def execute_inspect(target_id):
                 print("\n — Inspection — \n")
                 print(f"NAME: {item["name"].title()}        ITEM ID: {item["id"]}        TYPE: {item["type"]}")
                 print(f"DESCRIPTION: {item["description"]}")
+                print()
+                return
+            
+    if len(room["interacts"]) > 0:
+        for interact in room["interacts"]:
+            if target_id == interact["id"]:
+                print("\n — Inspection — \n")
+                print(f"NAME: {interact["name"].title()}        INTERACTION ID: {interact["id"]}        TYPE: interaction")
+                print(f"DESCRIPTION: {interact["description"]}")
                 print()
                 return
             

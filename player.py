@@ -7,7 +7,7 @@ change_turn = False
 room_change = True
 menu_state = False
 
-inventory = [weapon_dev, armour_dev]
+inventory = [item_healing_potion]
 
 equipment = {
     "weapon": weapon_default,
@@ -21,9 +21,10 @@ stats = {
     "evasion": 10,
 }
 
-gold = 1000
+gold = 0
 charge_attack = False
 evade_attack = False
+enemies_killed = 0
 
 def print_health():
     """Print the player's health as hearts: 10 hearts, each worth 10 HP, with gaps of one space between hearts."""

@@ -26,17 +26,10 @@ def execute_interact(interaction_id): # Command for interacting with special obj
 
                 case "shop":
                     match npc_merchant["state"]:
-
                         case 0:
                             player.menu_state = True
                             shops.open_shop()
-                            break
-
-                        case 1:
-                            break
-
-                        case 2:
-                            break
+                            return
 
                 case "keeper":
                     match npc_dungeonkeeper["state"]:
@@ -49,7 +42,7 @@ def execute_interact(interaction_id): # Command for interacting with special obj
                             print("\nDungeon Keeper: Bring me the trophies of the Wildrule and show me that you are the one-of-a-kind hero that you think you are.\n")
                             npc_dungeonkeeper["state"] = 1
 
-                            break
+                            return
 
                         case 1:
 
@@ -74,17 +67,17 @@ def execute_interact(interaction_id): # Command for interacting with special obj
                                 print("\nDungeon Keeper: You're back already? Aren't you eager to dive into your demise.")
                                 print("\nDungeon Keeper: Many a hero has come and gone only to be martyred inside the dungeon, with no one to help them or comfort them.")
                                 print("\nDungeon Keeper: I see you have all the Wildrule trophies. Very well then. You have told me your potential. Now you must show it.")
-                                print("\n * The Dungeon Keeper took your trophies and unlocked the door into the dungeon *\n")
+                                print("\n * The Dungeon Keeper took your trophies and unlocked the door into the dungeon *\n * You can go into the dungeon by entering 'go dungeon' *\n")
                                 player.inventory.remove(item_forest_trophy)
                                 player.inventory.remove(item_plains_trophy)
                                 player.inventory.remove(item_tundra_trophy)
                                 npc_dungeonkeeper["state"] = 2
 
-                            break
+                            return
 
                         case 2:
-                            print("\nDungeon Keeper: What are you waiting for? You forgot something?\n")
-                            break
+                            print("\nDungeon Keeper: What are you waiting for? You forgot something?\n* You can go into the dungeon by entering 'go dungeon' *\n")
+                            return
                 
                 case "guard":
                     match npc_guard["state"]:
@@ -98,7 +91,7 @@ def execute_interact(interaction_id): # Command for interacting with special obj
                             print("\nCity Guard: Well, if you could try and find who has my key, and then return the key back to me, then I'll allow you into the city without any questions.")
                             npc_guard["state"] = 1
 
-                            break
+                            return
 
                         case 1:
 
@@ -126,16 +119,64 @@ def execute_interact(interaction_id): # Command for interacting with special obj
                                 player.inventory.remove(item_city_key_2)
                                 npc_guard["state"] = 2
 
-                            break
+                            return
 
                         case 2:
                             print("\nCity Guard: Thank you so much kind sir!\n")
-                            break
+                            return
 
+                case "chest":
+                    match player.current_room["id"]:
 
+                        case "forest_s":
+                            match obj_chest1["state"]:
+                                case 0:
+                                    print("\nThe chest is locked. Use a chest key to unlock the chest.\n")
+                                case 1:
+                                    print("\nYou got a HEALTH POTION!\n")
+                                    player.inventory.append(item_healing_potion)
+                                    obj_chest1["state"] = 2
+                                case 2:
+                                    print("\nYou've already looted this chest.\n")
 
-        else:
-            print(f"\nERROR: '{interaction_id}' cannot be interacted with. Enter 'help' to see what can be interacted with in the current room.\n")
+                        case "plains_sw":
+                            match obj_chest2["state"]:
+                                case 0:
+                                    print("\nThe chest is locked. Use a chest key to unlock the chest.\n")
+                                case 1:
+                                    print("\nYou got an IRON SHIELD!\n")
+                                    player.inventory.append(armour_iron_shield)
+                                    obj_chest1["state"] = 2
+                                case 2:
+                                    print("\nYou've already looted this chest.\n")
+
+                        case "tundra_n":
+                            match obj_chest3["state"]:
+                                case 0:
+                                    print("\nThe chest is locked. Use a chest key to unlock the chest.\n")
+                                case 1:
+                                    print("\nYou got a METAL CLUB!\n")
+                                    player.inventory.append(weapon_metalclub)
+                                    obj_chest3["state"] = 2
+                                case 2:
+                                    print("\nYou've already looted this chest.\n")
+
+                case "mantle":
+                    match player.current_room["id"]:
+                        case "kingdom_south":
+                            has_sword = False
+                            for item in player.inventory:
+                                if item["id"] == "templesword":
+                                    has_sword = True
+                                    break
+                            if has_sword == True:
+                                print("\n[!] Enter 'use templesword' to finish the game. [!]\n")
+                                return
+                            else:
+                                print("\nYou do not have the appropriate sword to put on the mantle.\n")
+                                return
+
+    print(f"\nERROR: '{interaction_id}' cannot be interacted with. Enter 'help' to see what can be interacted with in the current room.\n")
 
 
 
@@ -151,12 +192,67 @@ def execute_use(item_id): # Command for using items in the player's inventory
 
         match item_id:
 
-            case "test3":
-                if player.current_room["name"] == "test room 1":
-                    print("\nYou unlocked the door.\n")
-                    player.inventory.remove(item)
+            case "hp":
+                if player.stats["health"] < 100:
+                    old_health = player.stats["health"]
+                    player.stats["health"] = player.stats["health"] + 75.0
+                    if player.stats["health"] > 100:
+                        player.stats["health"] = 100
+                    new_health = player.stats["health"]
+                    hp_healed = new_health - old_health
+                    print(f"\nYou used the health potion and healed {round(hp_healed, 1)} health.\n")
                 else:
-                    print("\nYou cannot use this item here.\n")
+                    print("\nERROR: You are already at full health!\n")
+
+            case "key":
+                 match player.current_room["id"]:
+
+                    case "forest_s":
+                        if obj_chest1["state"] == 0:
+                            obj_chest1["state"] = 1
+                            player.inventory.remove(item_chest_key)
+                            print("\nYou unlocked the chest.\n")
+                        else:
+                            print("\nYou've already unlocked this chest.\n")
+
+                    case "plains_sw":
+                        if obj_chest2["state"] == 0:
+                            obj_chest2["state"] = 1
+                            player.inventory.remove(item_chest_key)
+                            print("\nYou unlocked the chest.\n")
+                        else:
+                            print("\nYou've already unlocked this chest.\n")
+
+                    case "tundra_n":
+                        if obj_chest3["state"] == 0:
+                            obj_chest3["state"] = 1
+                            player.inventory.remove(item_chest_key)
+                            print("\nYou unlocked the chest.\n")
+                        else:
+                            print("\nYou've already unlocked this chest.\n")
+
+                    case _:
+                        print("\nERROR: There is nothing in this room to use the key.\n")
+
+            case "templesword":
+                match player.current_room["id"]:
+                        case "kingdom_south":
+                            has_sword = False
+                            for item in player.inventory:
+                                if item["id"] == "templesword":
+                                    has_sword = True
+                                    break
+                            if has_sword == True:
+                                print("\n————————————————————————————————————————————————————————————————————————————————————————————————————")
+                                print("CONGRATULATIONS! YOU HAVE BEATEN THE GAME!")
+                                print("————————————————————————————————————————————————————————————————————————————————————————————————————")
+                                print("\n — Statistics — \n")
+                                print(f"Turns Used: {player.current_turn}")
+                                print(f"Enemies Killed: {player.enemies_killed}")
+                                print(f"Gold: {player.gold}")
+                                print()
+                                exit()
+                                
 
             case _:
                 print("\nERROR: That item cannot be used.\n")

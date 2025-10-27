@@ -29,7 +29,7 @@ enemy_goose = {
     "charge_attack": { "damage": 0, "chance": 0, "charge": False, "miss_multiplier": 0, },
     "counter_attack": { "damage": 25, "chance": 30, },
 
-    "gold": 30,
+    "gold": 50,
     "loot": { "item": accessory_feather, "chance": 15, }
 }
 
@@ -50,7 +50,7 @@ enemy_bear = {
     "charge_attack": { "damage": 0, "chance": 0, "charge": False, "miss_multiplier": 0, },
     "counter_attack": { "damage": 0, "chance": 0, },
 
-    "gold": 30,
+    "gold": 50,
     "loot": { "item": None, "chance": 0, }
 }
 
@@ -71,7 +71,7 @@ enemy_bull = {
     "charge_attack": { "damage": 40, "chance": 100, "charge": False, "miss_multiplier": 3, },
     "counter_attack": { "damage": 0, "chance": 0, },
 
-    "gold": 30,
+    "gold": 50,
     "loot": { "item": accessory_horn, "chance": 15, }
 }
 
@@ -93,7 +93,7 @@ miniboss_giant = {
     "charge_attack": { "damage": 40, "chance": 20, "charge": False, "miss_multiplier": 2, },
     "counter_attack": { "damage": 30, "chance": 10, },
 
-    "gold": 500,
+    "gold": 300,
     "loot": { "item": item_forest_trophy, "chance": 100, }
 }
 
@@ -116,7 +116,7 @@ enemy_polarbear = {
     "charge_attack": { "damage": 0, "chance": 0, "charge": False, "miss_multiplier": 0, },
     "counter_attack": { "damage": 40, "chance": 20, },
 
-    "gold": 65,
+    "gold": 75,
     "loot": { "item": None, "chance": 0, }
 }
 
@@ -137,7 +137,7 @@ enemy_leopard = {
     "charge_attack": { "damage": 45, "chance": 10, "charge": False, "miss_multiplier": 1.5, },
     "counter_attack": { "damage": 35, "chance": 30, },
 
-    "gold": 65,
+    "gold": 75,
     "loot": { "item": accessory_paw, "chance": 15, }
 }
 
@@ -158,7 +158,7 @@ enemy_owl = {
     "charge_attack": { "damage": 30, "chance": 30, "charge": False, "miss_multiplier": 1, },
     "counter_attack": { "damage": 35, "chance": 15, },
 
-    "gold": 65,
+    "gold": 75,
     "loot": { "item": None, "chance": 0, }
 }
 
@@ -203,7 +203,7 @@ enemy_fox = {
     "charge_attack": { "damage": 0, "chance": 0, "charge": False, "miss_multiplier": 0, },
     "counter_attack": { "damage": 40, "chance": 30, },
 
-    "gold": 50,
+    "gold": 65,
     "loot": { "item": None, "chance": 0, }
 }
 
@@ -224,7 +224,7 @@ enemy_rhino = {
     "charge_attack": { "damage": 60, "chance": 50, "charge": False, "miss_multiplier": 2, },
     "counter_attack": { "damage": 40, "chance": 50, },
 
-    "gold": 50,
+    "gold": 65,
     "loot": { "item": accessory_hide, "chance": 25, }
 }
 
@@ -245,7 +245,7 @@ enemy_elephant = {
     "charge_attack": { "damage": 50, "chance": 30, "charge": False, "miss_multiplier": 2, },
     "counter_attack": { "damage": 30, "chance": 30, },
 
-    "gold": 50,
+    "gold": 65,
     "loot": { "item": None, "chance": 0, }
 }
 
@@ -276,7 +276,7 @@ Only the strongest of heroes can vanquish this beast.""",
 skeleton_king = {
 
     "id": "king",
-    "name": "The Skeleton King",
+    "name": "Skeleton King",
     "area": "Dungeon",
 
     "description": """A rare and elusive monster, the infamous Plains Python is a silent but deadly killer, hidden amongst the bare foliage.

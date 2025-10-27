@@ -490,8 +490,13 @@ def enemy_killed(enemy):
             print(f"\n{enemy["name"].upper()} was killed! You gained {gold_gained} gold.\n")
     else:
         print(f"\n{enemy["name"].upper()} was killed! You gained {gold_gained} gold.\n")
+
+    if enemy["id"] == "king":
+                print(" * You can go back to the kingdom by entering 'go exit' *\n")
     
     enemy["charge_attack"]["charge"] = False
+    player.enemies_killed = player.enemies_killed + 1
+
 
 
 def evade_attack(): # Function for the 'evade' command

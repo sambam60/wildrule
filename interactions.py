@@ -21,11 +21,39 @@ npc_guard = {
 npc_merchant = {
 
     "id": "shop",
-    "name": "", # name will be set based on which village the player is currently in
-    "description": "", # description will be set based on which village the player is currently in
+    "name": "Shop Merchant", # name will be set based on which village the player is currently in
+    "description": "A shop merchant, wearing a feather hat and a fleece jacket. He is standing in front of a small market stand.", # description will be set based on which village the player is currently in
     "state": 0,
     "inventory": [], # items on sale will be set based on which village the player is currently in
 }
 
-# "A rather posh looking villager, standing in front of a quaint market stand. He smiles at whoever happens to walk past his stand.",
-# "A bulky looking villager, wearing a thick fur snow jacket. He looks at you and signals towards his igloo."
+obj_chest1 = {
+
+    "id": "chest",
+    "name": "Locked Chest",
+    "description": "A locked chest, perhaps containing a valuable item.",
+    "state": 0,
+}
+
+obj_chest2 = {
+
+    "id": "chest",
+    "name": "Locked Chest",
+    "description": "A locked chest, perhaps containing a valuable item.",
+    "state": 0,
+}
+
+obj_chest3 = {
+
+    "id": "chest",
+    "name": "Locked Chest",
+    "description": "A locked chest, perhaps containing a valuable item.",
+    "state": 0,
+}
+
+obj_mantle = {
+    "id": "mantle",
+    "name": "Sword Mantle",
+    "description": "A mantle that was once used to display the Temple Sword, which has been lost in the dungeon.",
+    "state": False,
+}
