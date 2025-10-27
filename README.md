@@ -1,4 +1,16 @@
-# Team10project
+<pre><span style="color: green">
+         _________ _        ______   _______           _        _______ 
+|\     /|\__   __/( \\      (  __  \\ (  ____ )|\     /|( \\      (  ____ \\
+| )   ( |   ) (   | (      | (  \\  )| (    )|| )   ( || (      | (    \\/
+| | _ | |   | |   | |      | |   ) || (____)|| |   | || |      | (__    
+| |( )| |   | |   | |      | |   | ||     __)| |   | || |      |  __)   
+| || || |   | |   | |      | |   ) || (\\ (   | |   | || |      | (      
+| () () |___) (___| (____/\\| (__/  )| ) \\ \\__| (___) || (____/\\| (____/\\
+(_______)\\_______/(_______/(______/ |/   \\__/(_______)(_______/(_______/
+                                                                        </span></pre>
+
+**Designed by Team 10 for CM1101, Year 1 Computer Science @ Cardiff University 2025**
+
 
 A text-based adventure game with voice input/output capabilities set in the fantasy world of Wildrule.
 
