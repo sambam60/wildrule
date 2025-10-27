@@ -7,6 +7,7 @@ import subprocess
 from pathlib import Path
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -15,6 +16,15 @@ ROOT = Path(__file__).parent
 WEB_DIR = ROOT / "web"
 
 app = FastAPI()
+
+# Add CORS middleware to allow requests from custom domain
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins for the health check
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 # Serve the static frontend
