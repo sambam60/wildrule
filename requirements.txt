@@ -1,0 +1,8 @@
+# Text-to-speech
+pyttsx3
+
+# Voice recognition and audio processing
+vosk
+sounddevice
+numpy
+

@@ -13,7 +13,6 @@ from minimap import draw_minimap
 import time
 import sys
 import threading
-import queue
 import textwrap
 import tts
 import voice_input
@@ -172,73 +171,91 @@ def print_room_enemies(room):
 
 
 
-def print_slowly(text, delay=0.03):
-    """Print text character by character with a small delay. Press 'SPACE' to skip."""
-    skip_queue = queue.Queue()
-    stop_event = threading.Event()
-    
-    def get_input():
+def _start_skip_listener(skip_event):
+    """Spawn a background thread that watches for skip key presses. Returns the thread or None."""
+    stdin = getattr(sys, "stdin", None)
+    if stdin is None:
+        return None
+    try:
+        if not stdin.isatty():
+            return None
+    except Exception:
+        return None
+
+    def _listener():
         try:
-            import msvcrt  # Windows
-            while not stop_event.is_set():
+            import msvcrt  # type: ignore
+
+            while not skip_event.is_set():
                 if msvcrt.kbhit():
-                    key = msvcrt.getch().decode('utf-8').lower()
-                    if key in [' ']:
-                        skip_queue.put(True)
-                        break
+                    key = msvcrt.getch()
+                    try:
+                        decoded = key.decode("utf-8")
+                    except Exception:
+                        continue
+                    if decoded.lower() in {" ", "s"}:
+                        skip_event.set()
+                        return
         except ImportError:
             try:
-                # Only use raw mode if interactive TTY
-                if sys.stdin.isatty():
-                    import termios, tty  # Unix/Linux/Mac
-                    import select
-                    fd = sys.stdin.fileno()
-                    old_settings = termios.tcgetattr(fd)
-                    try:
-                        tty.setraw(sys.stdin.fileno())
-                        while not stop_event.is_set():
-                            if select.select([sys.stdin], [], [], 0) == ([sys.stdin], [], []):
-                                char = sys.stdin.read(1).lower()
-                                if char in ['s', ' ']:
-                                    skip_queue.put(True)
-                                    break
-                    finally:
-                        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-            except Exception:
-                # Non-interactive or unsupported terminal; skip skip-key feature
-                pass
-    
-    # Start input thread only in interactive terminals
-    input_thread = None
-    if sys.stdin.isatty():
-        input_thread = threading.Thread(target=get_input, daemon=True)
-        input_thread.start()
-    
-    # Print text character by character
-    for idx, char in enumerate(text):
-        print(char, end='', flush=True)
-        time.sleep(delay)
-        
-        # Check if skip was requested
-        try:
-            skip_queue.get_nowait()
-            # Skip was requested, print remaining text immediately
-            remaining_text = text[idx + 1:]
-            if remaining_text:
-                print(remaining_text, end='', flush=True)
-            break
-        except queue.Empty:
-            continue
-    
-    # Ensure input thread stops and terminal settings are restored
-    stop_event.set()
-    try:
-        if input_thread is not None:
-            input_thread.join(timeout=0.1)
-    except Exception:
-        pass
+                import termios
+                import tty
+                import select
 
-    print()  # Add newline at the end
+                fd = stdin.fileno()
+                old_settings = termios.tcgetattr(fd)
+                try:
+                    tty.setcbreak(fd)
+                    while not skip_event.is_set():
+                        ready, _, _ = select.select([stdin], [], [], 0.05)
+                        if ready:
+                            char = stdin.read(1)
+                            if char and char.lower() in {" ", "s"}:
+                                skip_event.set()
+                                return
+                finally:
+                    termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+            except Exception:
+                return
+
+    listener = threading.Thread(target=_listener, daemon=True)
+    listener.start()
+    return listener
+
+
+def print_slowly(text, delay=0.03):
+    """Print text character by character with a small delay. Press 'SPACE' to skip."""
+    text = str(text)
+    skip_event = threading.Event()
+    listener = _start_skip_listener(skip_event)
+
+    for idx, char in enumerate(text):
+        if skip_event.is_set():
+            remaining = text[idx:]
+            if remaining:
+                print(remaining, end="", flush=True)
+            break
+        print(char, end="", flush=True)
+        time.sleep(delay)
+    else:
+        # Loop finished without skip; ensure trailing newline.
+        print()
+        skip_event.set()
+        if listener is not None:
+            try:
+                listener.join(timeout=0.1)
+            except Exception:
+                pass
+        return
+
+    # Skip was triggered, ensure we finish the line and then newline.
+    print()
+    skip_event.set()
+    if listener is not None:
+        try:
+            listener.join(timeout=0.1)
+        except Exception:
+            pass
 
 
 
@@ -377,7 +394,7 @@ def execute_take(item_id): # Take item command
 
 
 
-def execute_drop(item_id): # Drop item command
+def execute_drop(item_id): # drop item command
     
     room_items = player.current_room["items"]
 

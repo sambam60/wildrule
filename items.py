@@ -31,17 +31,17 @@ accessory_default = {
 
 weapon_dev = {
     "id": "wdev",
-    "name": "dev weapon",
+    "name": "Rusty Sword",
     "type": "weapon",
-    "description": "dev weapon",
+    "description": "A weathered sword with nicks along the blade. Despite its appearance, it's surprisingly effective.",
     "damage": 75,
 }
 
 armour_dev = {
     "id": "adev",
-    "name": "dev armour",
+    "name": "Rusty Armour",
     "type": "armour",
-    "description": "dev armour",
+    "description": "Timeworn armor pieces that have seen better days. Still offers decent protection.",
     "defence": 50,
 }
 
