@@ -40,7 +40,7 @@ forest_north = {
 """You step into the Northern Forest, where ancient oaks tower overhead like silent guardians. The forest floor is soft with moss and fallen leaves, crunching gently beneath your feet. Sunlight filters through the canopy in golden shafts, illuminating patches of wildflowers. The air is fresh and alive with the sounds of birdsong. You can venture EAST toward the northeast corner, SOUTH deeper into the forest, or WEST to the northwest paths.""",
 
     "exits": {
-        "north": "Stater",
+        "north": "Starter",
         "south": "Forest_S",
         "east": "Forest_NE",
         "west": "Forest_NW",

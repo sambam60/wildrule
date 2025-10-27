@@ -40,10 +40,22 @@ def turn_change(function, *args): # CONTROLS FUNCTIONS THAT WILL RUN WHEN A TURN
         case "player_attack":
             if len(player.current_room["enemies"]) > 0:
                 if player.current_room["enemies"][0]["health"] >= 0:
-                    enemy_attack()
+                    if getattr(player, "time_based_combat", False) and getattr(player, "locked_in_combat", False):
+                        try:
+                            timed_enemy_attack()
+                        except Exception:
+                            enemy_attack()
+                    else:
+                        enemy_attack()
 
         case "evade_attack":
-            enemy_attack()
+            if getattr(player, "time_based_combat", False) and getattr(player, "locked_in_combat", False):
+                try:
+                    timed_enemy_attack()
+                except Exception:
+                    enemy_attack()
+            else:
+                enemy_attack()
 
 
 
@@ -124,9 +136,14 @@ def execute_command(command): # Command list
                 player.change_turn = True
                 execute_attack(command[1], command[2])
             elif len(command) == 2:
-                print("\nERROR: Please specify an attack type.\n")
+                # Attack with just enemy name - default to normal attack
+                player.change_turn = True
+                execute_attack(command[1], "normal")
             else:
-                print("\nERROR: Please specify the enemy to attack and the attack type.\n")
+                print("\nERROR: Please specify the enemy to attack.\n")
+                print("Usage: attack [enemy] [attack type]\n")
+                print("Attack types: normal, charge, counter\n")
+                print("You can also use 'attack [enemy]' to perform a normal attack.\n")
 
         case "evade":
             execute_evade()
@@ -327,6 +344,10 @@ def explore_room(room):
         room["explored"] = True
 
 def execute_go(direction): # Movement command
+    if getattr(player, "time_based_combat", False) and getattr(player, "locked_in_combat", False):
+        print("\nERROR: You cannot leave while in combat.\n")
+        return
+
     if check_exit_availability(direction) == False:
         return
     
@@ -425,6 +446,7 @@ def execute_help(exits, room_items, inv_items): # Prints all valid commands that
     # Valid interactions for enemies in the current room
     for enemy in player.current_room["enemies"]:
         print(f"ATTACK {player.current_room["enemies"][0]["id"].upper()} [attack type] to attack the {player.current_room["enemies"][0]["name"]}.")
+        print(f"  (You can use 'attack {player.current_room["enemies"][0]["id"].upper()}' for normal attack)")
         print(f"DODGE/EVADE to try and dodge the {player.current_room["enemies"][0]["id"].upper()}'s oncoming attack.")
 
     print("\nHELP for a list of available commands.")
@@ -736,6 +758,17 @@ def execute_unequip(item_id):
 
 def execute_attack(enemy_id, attack_type):
     room = player.current_room
+    
+    # Show combat help on first attack
+    if player.first_attack:
+        print("\n — Combat Guide — \n")
+        print("There are three attack types you can use:")
+        print("  • NORMAL: Standard damage, no special effects")
+        print("  • CHARGE: High damage but requires two turns (first turn: charge up, second turn: attack)")
+        print("  • COUNTER: Double damage against charging enemies, half damage otherwise")
+        print("\nYou can also EVADE enemy attacks by using 'evade' or 'dodge' commands.")
+        print("\nTip: Use 'attack [enemy]' for normal attack, or 'attack [enemy] [type]' for other types.\n")
+        player.first_attack = False
 
     if len(room["enemies"]) == 0:
         print("\nERROR: Specified enemy is not in this room or does not exist.\n")
@@ -746,9 +779,16 @@ def execute_attack(enemy_id, attack_type):
             print("\nERROR: Specified enemy is not in this room or does not exist.\n")
 
         elif (attack_type != "normal") and (attack_type != "charge") and (attack_type != "counter"):
-            print(f"\nERROR: '{attack_type}' is not a valid attack type (Normal, Charge or Counter).\n")
+            print(f"\nERROR: '{attack_type}' is not a valid attack type (normal, charge or counter).\n")
         
         else:
+            # If time-based combat and not locked yet but enemy present, lock now
+            if getattr(player, "time_based_combat", False) and not getattr(player, "locked_in_combat", False):
+                player.locked_in_combat = True
+                # precombat quick-enter bonus if this attack was during pending precombat
+                if getattr(player, "pending_precombat", None) == enemy_id:
+                    player.precombat_bonus = 1.25
+                player.pending_precombat = None
             turn_change(player_attack, enemy_id, attack_type)
 
 

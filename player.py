@@ -23,6 +23,12 @@ stats = {
 gold = 0
 charge_attack = False
 evade_attack = False
+first_attack = True
+time_based_combat = False
+pending_precombat = None
+locked_in_combat = False
+precombat_bonus = None
+active_indicator_bonus = None
 
 def print_health():
     """Print the player's health as hearts: 10 hearts, each worth 10 HP, with gaps of one space between hearts."""

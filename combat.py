@@ -8,6 +8,9 @@ Attacks also have a small chance of being evaded/missed, based off the attacker'
 """
 
 import random
+import sys
+import time
+import select
 import player
 from map import rooms
 from enemies import *
@@ -54,24 +57,32 @@ def spawn_enemy():
                     if does_enemy_exist == False:
                         room["enemies"].append(enemy_bull)
                         print(f"A wild {enemy_bull["name"].upper()} spots you!\n")
+                        if getattr(player, "time_based_combat", False):
+                            player.pending_precombat = enemy_bull["id"]
 
                 elif spawn_chance > 20 and spawn_chance <= 40:
                     does_enemy_exist = check_enemy_exists(enemy_bear)
                     if does_enemy_exist == False:
                         room["enemies"].append(enemy_bear)
                         print(f"A wild {enemy_bear["name"].upper()} spots you!\n")
+                        if getattr(player, "time_based_combat", False):
+                            player.pending_precombat = enemy_bear["id"]
 
                 elif spawn_chance > 40 and spawn_chance <= 60:
                     does_enemy_exist = check_enemy_exists(enemy_goose)
                     if does_enemy_exist == False:
                         room["enemies"].append(enemy_goose)
                         print(f"A wild {enemy_goose["name"].upper()} spots you!\n")
+                        if getattr(player, "time_based_combat", False):
+                            player.pending_precombat = enemy_goose["id"]
 
                 elif spawn_chance > 60 and spawn_chance <= 65:
                     does_enemy_exist = check_enemy_exists(miniboss_giant)
                     if does_enemy_exist == False:
                         room["enemies"].append(miniboss_giant)
                         print(f"A rare {miniboss_giant["name"].upper()} towers overhead, and locks its sights upon you.\n")
+                        if getattr(player, "time_based_combat", False):
+                            player.pending_precombat = miniboss_giant["id"]
 
             case "Tundra":
 
@@ -80,24 +91,32 @@ def spawn_enemy():
                     if does_enemy_exist == False:
                         room["enemies"].append(enemy_polarbear)
                         print(f"A wild {enemy_polarbear["name"].upper()} spots you!\n")
+                        if getattr(player, "time_based_combat", False):
+                            player.pending_precombat = enemy_polarbear["id"]
 
                 elif spawn_chance > 25 and spawn_chance <= 50:
                     does_enemy_exist = check_enemy_exists(enemy_leopard)
                     if does_enemy_exist == False:
                         room["enemies"].append(enemy_leopard)
                         print(f"A wild {enemy_leopard["name"].upper()} spots you!\n")
+                        if getattr(player, "time_based_combat", False):
+                            player.pending_precombat = enemy_leopard["id"]
 
                 elif spawn_chance > 50 and spawn_chance <= 75:
                     does_enemy_exist = check_enemy_exists(enemy_owl)
                     if does_enemy_exist == False:
                         room["enemies"].append(enemy_owl)
                         print(f"A wild {enemy_owl["name"].upper()} spots you!\n")
+                        if getattr(player, "time_based_combat", False):
+                            player.pending_precombat = enemy_owl["id"]
 
                 elif spawn_chance > 75 and spawn_chance <= 80:
                     does_enemy_exist = check_enemy_exists(miniboss_werewolf)
                     if does_enemy_exist == False:
                         room["enemies"].append(miniboss_werewolf)
                         print(f"A rare {miniboss_werewolf["name"].upper()} rushes towards you!\n")
+                        if getattr(player, "time_based_combat", False):
+                            player.pending_precombat = miniboss_werewolf["id"]
 
             case "Plains":
 
@@ -106,27 +125,43 @@ def spawn_enemy():
                     if does_enemy_exist == False:
                         room["enemies"].append(enemy_fox)
                         print(f"A wild {enemy_fox["name"].upper()} spots you!\n")
+                        if getattr(player, "time_based_combat", False):
+                            player.pending_precombat = enemy_fox["id"]
 
                 elif spawn_chance > 25 and spawn_chance <= 50:
                     does_enemy_exist = check_enemy_exists(enemy_rhino)
                     if does_enemy_exist == False:
                         room["enemies"].append(enemy_rhino)
                         print(f"A wild {enemy_rhino["name"].upper()} spots you!\n")
+                        if getattr(player, "time_based_combat", False):
+                            player.pending_precombat = enemy_rhino["id"]
 
                 elif spawn_chance > 50 and spawn_chance <= 75:
                     does_enemy_exist = check_enemy_exists(enemy_elephant)
                     if does_enemy_exist == False:
                         room["enemies"].append(enemy_elephant)
                         print(f"A wild {enemy_elephant["name"].upper()} spots you!\n")
+                        if getattr(player, "time_based_combat", False):
+                            player.pending_precombat = enemy_elephant["id"]
 
                 elif spawn_chance > 75 and spawn_chance <= 80:
                     does_enemy_exist = check_enemy_exists(miniboss_python)
                     if does_enemy_exist == False:
                         room["enemies"].append(miniboss_python)
                         print(f"A rare {miniboss_python["name"].upper()} slithers behind you!\n")
+                        if getattr(player, "time_based_combat", False):
+                            player.pending_precombat = miniboss_python["id"]
 
     else:
-        enemy_attack() # If current room already has an enemy, the enemy will attack the player instead
+        # If current room already has an enemy
+        if getattr(player, "time_based_combat", False) and not getattr(player, "locked_in_combat", False):
+            # Trigger pre-combat instead of immediate attack
+            try:
+                player.pending_precombat = room["enemies"][0]["id"]
+            except Exception:
+                pass
+        else:
+            enemy_attack() # Default behaviour: enemy attacks
 
 
 
@@ -399,6 +434,29 @@ def enemy_attack():
                 print(f"You took {damage_dealt} damage from the attack. You are now at {round(player.stats["health"], 1)} health.\n")
 
 
+def timed_enemy_attack(duration_seconds: float = 10.0):
+    """Show a countdown bar before the enemy attacks (time-based combat)."""
+    try:
+        enemy = player.current_room["enemies"][0]
+    except Exception:
+        return enemy_attack()
+
+    total_ticks = 20
+    tick_time = max(0.05, duration_seconds / total_ticks)
+    bar = "|" * total_ticks
+    RED = "\033[38;2;255;0;0m"
+    RESET = "\033[0m"
+    sys.stdout.write("Enemy preparing attack: ")
+    sys.stdout.flush()
+    for t in range(total_ticks, 0, -1):
+        sys.stdout.write(f"\rEnemy preparing attack: {RED}{bar[:t]}{RESET}    ")
+        sys.stdout.flush()
+        time.sleep(tick_time)
+    sys.stdout.write("\rEnemy preparing attack:            \n")
+    sys.stdout.flush()
+    enemy_attack()
+
+
 
 def player_attack(enemy_id, attack_type):
 
@@ -416,16 +474,34 @@ def player_attack(enemy_id, attack_type):
 
     enemy = selected_enemy["id"]
 
+    # helper: apply time-based bonuses
+    def _apply_time_bonuses(base_damage: float) -> tuple[float, str]:
+        note = ""
+        final_damage = base_damage
+        if getattr(player, "time_based_combat", False) and getattr(player, "locked_in_combat", False):
+            # Timed strike indicator
+            zone, mult = prompt_timed_indicator()
+            final_damage *= mult
+            note = f" [Timed: {zone}]"
+            # One-time precombat bonus (if any)
+            bonus = getattr(player, "precombat_bonus", None)
+            if bonus:
+                final_damage *= bonus
+                note += " [Precombat Bonus]"
+                player.precombat_bonus = None
+        return final_damage, note
+
     match attack_type:
         
         case "normal":
 
             if selected_enemy["health"] > 0:
 
-                damage_dealt = round(calculate_damage("player", "normal"), 1)
+                base = round(calculate_damage("player", "normal"), 1)
+                damage_dealt, tnote = _apply_time_bonuses(base)
                 selected_enemy["health"] = selected_enemy["health"] - damage_dealt
 
-                print(f"You attacked {enemy.upper()} and dealt {damage_dealt} damage.")
+                print(f"You attacked {enemy.upper()} and dealt {round(damage_dealt,1)} damage.{tnote}")
 
                 if selected_enemy["health"] <= 0:
                     enemy_killed(selected_enemy)
@@ -441,9 +517,10 @@ def player_attack(enemy_id, attack_type):
             else:
                 if selected_enemy["health"] > 0:
 
-                    damage_dealt = round(calculate_damage("player", "charge"), 1)
+                    base = round(calculate_damage("player", "charge"), 1)
+                    damage_dealt, tnote = _apply_time_bonuses(base)
                     selected_enemy["health"] = selected_enemy["health"] - damage_dealt
-                    print(f"You charged at {enemy.upper()} and dealt {damage_dealt} damage.")
+                    print(f"You charged at {enemy.upper()} and dealt {round(damage_dealt,1)} damage.{tnote}")
                     player.charge_attack = False
 
                     if selected_enemy["health"] <= 0:
@@ -455,10 +532,11 @@ def player_attack(enemy_id, attack_type):
 
             if selected_enemy["health"] > 0:
 
-                    damage_dealt = round(calculate_damage("player", "counter"), 1)
+                    base = round(calculate_damage("player", "counter"), 1)
+                    damage_dealt, tnote = _apply_time_bonuses(base)
                     selected_enemy["health"] = selected_enemy["health"] - damage_dealt
 
-                    print(f"You countered {enemy.upper()} and dealt {damage_dealt} damage.")
+                    print(f"You countered {enemy.upper()} and dealt {round(damage_dealt,1)} damage.{tnote}")
 
                     if selected_enemy["charge_attack"]["charge"] == False:
                         print(f"Since {enemy.upper()} was not charging up an attack, your counter attack dealt less damage.")
@@ -492,7 +570,70 @@ def enemy_killed(enemy):
         print(f"\n{enemy["name"].upper()} was killed! You gained {gold_gained} gold.\n")
     
     enemy["charge_attack"]["charge"] = False
+    # Reset combat state for time-based mode
+    player.locked_in_combat = False
+    player.pending_precombat = None
+    player.precombat_bonus = None
+    player.active_indicator_bonus = None
 
 
 def evade_attack(): # Function for the 'evade' command
     player.evade_attack = True
+
+
+def prompt_timed_indicator(duration_seconds: float = 3.0) -> tuple[str, float]:
+    """Show a moving indicator across a bar. Return (zone, multiplier)."""
+    total_ticks = 40
+    tick_time = max(0.02, duration_seconds / total_ticks)
+    white_end = int(total_ticks * 0.6)
+    yellow_end = int(total_ticks * 0.9)
+
+    # Colours
+    WHITE = "\033[37m"
+    YELLOW = "\033[33m"
+    RED = "\033[38;2;255;0;0m"
+    RESET = "\033[0m"
+
+    # Build coloured bar once
+    bar_chars = []
+    for i in range(total_ticks):
+        if i < white_end:
+            bar_chars.append(f"{WHITE}▉{RESET}")
+        elif i < yellow_end:
+            bar_chars.append(f"{YELLOW}▉{RESET}")
+        else:
+            bar_chars.append(f"{RED}▉{RESET}")
+    bar_str = "".join(bar_chars)
+
+    sys.stdout.write("Time your strike! Press ENTER when the indicator hits RED.\n")
+    sys.stdout.flush()
+
+    position = 0
+    pressed = False
+    start = time.time()
+    while position < total_ticks:
+        caret = " " * position + "^"
+        sys.stdout.write(f"\r{bar_str}\n{caret}\r")
+        sys.stdout.flush()
+        # poll for keypress
+        ready, _, _ = select.select([sys.stdin], [], [], tick_time)
+        if ready:
+            try:
+                _ = sys.stdin.readline()
+            except Exception:
+                pass
+            pressed = True
+            break
+        position += 1
+
+    # clear line
+    sys.stdout.write("\r" + " " * 80 + "\r")
+    sys.stdout.flush()
+
+    idx = min(position, total_ticks - 1)
+    if idx < white_end:
+        return ("white", 1.0)
+    elif idx < yellow_end:
+        return ("yellow", 1.25)
+    else:
+        return ("red", 1.5)
