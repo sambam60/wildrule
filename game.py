@@ -160,10 +160,8 @@ def main():
 
         if player.menu_state == False:
 
-            print(f"TURN: {player.current_turn}")
-            print("\n — Mini Map — \n")
-            draw_minimap(player.current_room)
             player.print_health()
+            print(f"TURN: {player.current_turn}")
             print("\nWhat do you want to do?")
             # Use voice input if enabled; fallback handled inside
             def _menu(_exits, _room_items, _inv_items):
