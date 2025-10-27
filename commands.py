@@ -49,6 +49,11 @@ def turn_change(function, *args): # CONTROLS FUNCTIONS THAT WILL RUN WHEN A TURN
                             enemy_attack()
                     else:
                         enemy_attack()
+                    # Always show current HP after the attack turn resolves
+                    try:
+                        player.print_health()
+                    except Exception:
+                        pass
 
         case "evade_attack":
             if getattr(player, "time_based_combat", False) and getattr(player, "locked_in_combat", False):
@@ -58,6 +63,11 @@ def turn_change(function, *args): # CONTROLS FUNCTIONS THAT WILL RUN WHEN A TURN
                     enemy_attack()
             else:
                 enemy_attack()
+            # Always show current HP after the attack turn resolves
+            try:
+                player.print_health()
+            except Exception:
+                pass
 
 
 
@@ -280,6 +290,12 @@ def print_slowly(text, delay=0.03):
 
 def print_room(room): # Displays details of the current room when room changes occur
 
+    # Reset precombat/timed state on entering a room
+    if getattr(player, "time_based_combat", False):
+        player.pending_precombat = None
+        player.locked_in_combat = False
+        player.precombat_bonus = None
+
     say_text(f" — {room['name'].upper()} — \n")
     # Normalise any incidental indentation/newlines in multi-line descriptions
     description_text = textwrap.dedent(room["description"]).strip()
@@ -395,6 +411,12 @@ def execute_go(direction): # Movement command
 
 def execute_wait():
     print("You waited for one turn.\n")
+    # In time-based mode, waiting should still advance enemy actions if in combat
+    if getattr(player, "time_based_combat", False) and getattr(player, "locked_in_combat", False):
+        try:
+            timed_enemy_attack()
+        except Exception:
+            enemy_attack()
 
 
 
@@ -636,16 +658,7 @@ def execute_unequip(item_id):
 def execute_attack(enemy_id, attack_type):
     room = player.current_room
     
-    # Show combat help on first attack
-    if player.first_attack:
-        print("\n — Combat Guide — \n")
-        print("There are three attack types you can use:")
-        print("  • NORMAL: Standard damage, no special effects")
-        print("  • CHARGE: High damage but requires two turns (first turn: charge up, second turn: attack)")
-        print("  • COUNTER: Double damage against charging enemies, half damage otherwise")
-        print("\nYou can also EVADE enemy attacks by using 'evade' or 'dodge' commands.")
-        print("\nTip: Use 'attack [enemy]' for normal attack, or 'attack [enemy] [type]' for other types.\n")
-        player.first_attack = False
+    # Combat guide now shown when combat starts (spawn or charge), not on first attack
 
     if len(room["enemies"]) == 0:
         print("\nERROR: Specified enemy is not in this room or does not exist.\n")

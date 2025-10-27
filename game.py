@@ -13,6 +13,7 @@ import tts
 import voice_input
 from minimap import draw_minimap
 from combat import timed_enemy_attack
+import threading
 
 # ANSI colour constants
 PASTEL_GREEN = "\033[38;2;144;238;144m"
@@ -78,11 +79,16 @@ def main():
     global TTS_ENABLED
     TTS_ENABLED = bool(tts_enabled)
 
-    # ask user for time-based combat
-    try:
-        enable_tbc = input("Enable Time-Based Combat (y/n)? ").strip().lower().startswith("y")
-    except Exception:
-        enable_tbc = False
+    # ask user for time-based combat only if voice input and TTS are disabled
+    enable_tbc = False
+    if not voice_enabled and not tts_enabled:
+        try:
+            enable_tbc = input("Enable Time-Based Combat (y/n)? ").strip().lower().startswith("y")
+        except Exception:
+            enable_tbc = False
+    else:
+        print("Time-Based Combat is disabled when Voice Input or TTS is enabled.")
+    
     try:
         import player as _player_cfg
         _player_cfg.time_based_combat = bool(enable_tbc)
@@ -154,37 +160,61 @@ def main():
 
         if player.menu_state == False:
 
-            player.print_health()
             print(f"TURN: {player.current_turn}")
             print("\n — Mini Map — \n")
             draw_minimap(player.current_room)
+            player.print_health()
             print("\nWhat do you want to do?")
             # Use voice input if enabled; fallback handled inside
             def _menu(_exits, _room_items, _inv_items):
                 user_input = get_player_input(f"{PASTEL_GREEN}> {RESET}")
                 normalised_user_input = normalise_input(user_input)
                 return normalised_user_input
-            command = _menu(player.current_room["exits"], player.current_room["items"], player.inventory)
-            # Precombat prompt if time-based combat and an enemy just spotted you (pending precombat)
+            # Precombat prompt with concurrent bar (non-intrusive to typing)
             if getattr(player, "time_based_combat", False) and getattr(player, "pending_precombat", None) and not getattr(player, "locked_in_combat", False):
                 print("\nA foe eyes you. Enter combat or escape!")
                 print("Type an action now to ESCAPE (e.g., 'go south'), or type 'attack ' + enemy to ENTER with a bonus!")
-                # countdown bar
-                import sys as _sys
-                import time as _time
-                total = 18
-                for t in range(total, 0, -1):
-                    _sys.stdout.write(f"\rPre-Combat: {RED}{'|'*t}{RESET}    ")
-                    _sys.stdout.flush()
-                    _time.sleep(0.25)
-                _sys.stdout.write("\rPre-Combat:            \n")
-                _sys.stdout.flush()
-                # If still pending, lock into combat now
-                if getattr(player, "pending_precombat", None):
-                    print("\033[38;2;255;102;102mCombat Entered\033[0m")
-                    player.locked_in_combat = True
-                    player.precombat_bonus = None
-                    player.pending_precombat = None
+                # allocate a line for the bar above the prompt
+                print()  # empty line reserved for the bar
+                stop_event = threading.Event()
+                def _animate_precombat(total: int = 18, interval: float = 0.25):
+                    import sys as _sys
+                    import time as _time
+                    RED = "\033[38;2;255;0;0m"
+                    RESET = "\033[0m"
+                    t = total
+                    while t > 0 and not stop_event.is_set():
+                        # Save cursor, move up 1 line, draw, restore
+                        _sys.stdout.write("\033[s\033[1A\r")
+                        _sys.stdout.write(f"Pre-Combat: {RED}{'|'*t}{RESET}    \033[0K")
+                        _sys.stdout.write("\033[u")
+                        _sys.stdout.flush()
+                        _time.sleep(interval)
+                        t -= 1
+                    if not stop_event.is_set():
+                        # Time expired: lock combat and notify
+                        player.locked_in_combat = True
+                        player.precombat_bonus = None
+                        player.pending_precombat = None
+                        _sys.stdout.write("\033[s\033[1A\r")
+                        _sys.stdout.write("\033[38;2;255;102;102mCombat Entered\033[0m\033[0K")
+                        _sys.stdout.write("\033[u")
+                        _sys.stdout.flush()
+                anim_thread = threading.Thread(target=_animate_precombat, daemon=True)
+                anim_thread.start()
+
+                # Prompt for input while bar animates
+                command = _menu(player.current_room["exits"], player.current_room["items"], player.inventory)
+                # stop animation cleanly once we have input
+                stop_event.set()
+                try:
+                    anim_thread.join(timeout=0.2)
+                except Exception:
+                    pass
+                # If the player chose to attack the pending enemy quickly, bonus is set in execute_attack
+            else:
+                command = _menu(player.current_room["exits"], player.current_room["items"], player.inventory)
+
             execute_command(command)
             # check if player died after action
             if player.stats.get("health", 0) <= 0:
