@@ -82,7 +82,7 @@ For voice input features, download the Vosk offline speech recognition model:
   ```
 - **Windows**: No additional setup required (uses SAPI5 for TTS)
 
-### Quick Start
+### Quick Start (Terminal)
 
 Once installed, simply run:
 ```bash
@@ -90,6 +90,25 @@ python3 game.py
 ```
 
 The game will automatically detect available features and continue without errors if voice/TTS is unavailable.
+
+### Quick Start (Web)
+
+Install dependencies (preferably in a virtual environment):
+
+```bash
+pip install -r requirements.txt
+```
+
+Start the web server and open the browser:
+
+```bash
+python3 server.py
+# visit http://localhost:8000
+```
+
+Notes:
+- Audio features (TTS and microphone/voice input) may not function in hosted/sandboxed environments. The game will fall back to text input/output.
+- The web server runs the game inside a pseudo-terminal to preserve ANSI colors and prompts, streaming output to the web terminal.
 
 ## Usage
 

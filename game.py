@@ -130,6 +130,7 @@ def main():
         "",
         "You start with only a stick. Along your way, you will need to collect more items to defeat",
         "stronger enemies. Make sure to take advantage of the merchants scattered throughout the map.",
+        "Along your way, you will need to collect items to defeat enemies and progress through the game.",
         "",
         "To help you on your journey, you will find a map showing the different areas of the world and",
         "how you can travel through them. There are three biomes (Forest, Plains, and Tundra) and three",
@@ -160,6 +161,7 @@ def main():
 
         if player.menu_state == False:
 
+            draw_minimap(player.current_room)
             player.print_health()
             print(f"TURN: {player.current_turn}")
             print("\nWhat do you want to do?")

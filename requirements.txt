@@ -6,3 +6,7 @@ vosk
 sounddevice
 numpy
 
+# Web server
+fastapi
+uvicorn
+

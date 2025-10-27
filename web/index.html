@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Wildrule</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css" />
+    <style>
+      :root { color-scheme: dark; }
+      html, body {
+        height: 100vh;
+        width: 100vw;
+        margin: 0;
+        padding: 0;
+        background: #11131a;
+        overflow: hidden;
+      }
+      #terminal {
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="terminal"></div>
+    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
+    <script>
+      const term = new Terminal({
+        cursorBlink: true,
+        fontFamily: 'Menlo, Monaco, Consolas, "Courier New", monospace',
+        fontSize: 14,
+        theme: {
+          background: '#0b0d14',
+          foreground: '#dcdcdc',
+          cursor: '#58a6ff',
+        },
+      });
+      function startTerminal() {
+        const container = document.getElementById('terminal');
+        // Guard: wait for libs
+        if (!(window.Terminal && window.FitAddon && window.FitAddon.FitAddon)) {
+          setTimeout(startTerminal, 50);
+          return;
+        }
+        const term = new window.Terminal({
+          cursorBlink: true,
+          fontFamily: 'Menlo, Monaco, Consolas, "Courier New", monospace',
+          fontSize: 14,
+          theme: { background: '#0b0d14', foreground: '#dcdcdc', cursor: '#58a6ff' }
+        });
+        const fitAddon = new window.FitAddon.FitAddon();
+        term.loadAddon(fitAddon);
+        term.open(container);
+        const doFit = () => { try { fitAddon.fit(); } catch (_) {} };
+        window.addEventListener('resize', doFit);
+        doFit();
+
+        // WebSocket wiring
+        function append(text) { term.write(text); }
+        const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+        const ws = new WebSocket(`${proto}://${location.host}/ws`);
+        ws.addEventListener('open', () => {
+          append('\r\nConnected to server...\r\n');
+          setTimeout(() => { ws.send('n\n'); setTimeout(() => ws.send('n\n'), 120); }, 250);
+        });
+        ws.addEventListener('message', (e) => append(e.data));
+        ws.addEventListener('close', () => append('\r\n[Connection closed]\r\n'));
+        ws.addEventListener('error', () => append('\r\n[Connection error]\r\n'));
+        // Simple line editor: buffer until Enter, support Backspace
+        let buf = '';
+        term.onData(d => {
+          if (d === '\r' || d === '\n') {
+            term.write('\r\n');
+            if (ws.readyState === WebSocket.OPEN) ws.send(buf + '\n');
+            buf = '';
+            return;
+          }
+          // Backspace / DEL
+          if (d === '\u0008' || d === '\x7f') {
+            if (buf.length > 0) {
+              buf = buf.slice(0, -1);
+              term.write('\b \b');
+            }
+            return;
+          }
+          // Ignore other control chars
+          if (d < ' ') return;
+          buf += d;
+          term.write(d);
+        });
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', startTerminal);
+      } else {
+        startTerminal();
+      }
+
+      let ws;
+
+      function append(text) {
+        term.write(text);
+      }
+
+      function connect() {
+        const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+        ws = new WebSocket(`${proto}://${location.host}/ws`);
+
+        ws.addEventListener('open', () => {
+          append('\r\nConnected to server...\r\n');
+          setTimeout(() => {
+            ws.send('n\n');
+            setTimeout(() => ws.send('n\n'), 120);
+          }, 250);
+        });
+
+        ws.addEventListener('message', (event) => {
+          append(event.data);
+        });
+
+        ws.addEventListener('close', () => {
+          append('\r\n[Connection closed]\r\n');
+        });
+
+        ws.addEventListener('error', () => {
+          append('\r\n[Connection error]\r\n');
+        });
+      }
+
+      term.onData(data => {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(data);
+        }
+      });
+
+      connect();
+    </script>
+  </body>
+</html>
